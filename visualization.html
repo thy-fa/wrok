@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大数据招聘岗位数据分析 · 可视化方案</title>
+<style>
+  :root{
+    --ink:#1f2933; --sub:#52606d; --line:#e4e7eb; --bg:#ffffff;
+    --brand:#0b63ce; --brand-soft:#e8f1fc; --accent:#0f9d8a; --chip:#f4f6f8;
+    --warn:#b4540a; --warn-bg:#fff4e6;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:#eef2f7; color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    line-height:1.75; font-size:15px;}
+  .hero{background:linear-gradient(135deg,#0b63ce,#0f9d8a); color:#fff;
+    padding:54px 24px 46px; text-align:center;}
+  .hero h1{font-size:29px; margin:0 0 10px; letter-spacing:1px;}
+  .hero p{font-size:15px; opacity:.92; margin:0 auto; max-width:720px;}
+  .tags{margin-top:18px; display:flex; flex-wrap:wrap; gap:10px; justify-content:center;}
+  .tags span{background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.4);
+    padding:5px 14px; border-radius:20px; font-size:13px;}
+  .wrap{max-width:1000px; margin:30px auto; background:var(--bg);
+    padding:44px 50px; border-radius:14px; box-shadow:0 8px 30px rgba(20,40,80,.08);}
+  h2{font-size:20px; color:var(--brand); margin:38px 0 14px;
+    border-left:5px solid var(--brand); padding-left:12px;}
+  h3{font-size:16px; color:var(--ink); margin:18px 0 8px;}
+  p{margin:0 0 12px;}
+  ul{margin:0 0 12px; padding-left:20px;}
+  li{margin-bottom:7px;}
+  .card{background:var(--chip); border-left:4px solid var(--brand);
+    padding:14px 18px; border-radius:0 8px 8px 0; margin-bottom:14px; font-size:14px;}
+  .biz{background:#eafaf4; border:1px solid #bfe9d8; border-radius:8px;
+    padding:10px 14px; font-size:13.5px; color:#0f6b4f; margin:8px 0 14px;}
+  .note{background:var(--warn-bg); border:1px solid #f0d99b; border-radius:8px;
+    padding:10px 14px; font-size:13px; color:#7a5d12; margin:10px 0;}
+  table{width:100%; border-collapse:collapse; margin:6px 0 4px; font-size:13.5px;}
+  th,td{border:1px solid var(--line); padding:9px 12px; text-align:left; vertical-align:top;}
+  th{background:var(--brand-soft); color:var(--brand); font-weight:600;}
+  tr:nth-child(even) td{background:#fafbfc;}
+  table.meta td{background:#fff;}
+  .chart{margin-bottom:34px;}
+  .svgbox{background:#fbfcfe; border:1px solid var(--line); border-radius:10px;
+    padding:16px 12px; margin:12px 0; overflow-x:auto;}
+  .concl{background:#fafcff; border:1px solid #d8e6f8; border-radius:10px;
+    padding:16px 20px; margin-bottom:16px;}
+  .concl h3{color:var(--brand); margin-top:4px; font-size:15.5px;}
+  pre{background:#1f2933; color:#e6edf3; padding:16px 18px; border-radius:10px;
+    overflow-x:auto; font-size:12.5px; line-height:1.65;}
+  pre code{font-family:"Cascadia Code","Consolas",monospace; white-space:pre;}
+  code{background:var(--chip); padding:1px 5px; border-radius:4px; font-size:13px;}
+  pre code{background:none; padding:0;}
+  footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--line);
+    color:var(--sub); font-size:12.5px; text-align:center;}
+  @media(max-width:680px){.wrap{padding:28px 20px;}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>大数据招聘岗位数据分析 · 可视化方案</h1>
+  <p>基于前程无忧大数据岗位清洗数据集（3357 条 × 21 字段），
+     用 4 张图表回答应届生最关心的四个求职决策问题：去哪、值多少、学什么、投哪里。</p>
+  <div class="tags">
+    <span>Python</span><span>pandas</span><span>matplotlib</span>
+    <span>数据可视化</span><span>求职决策</span><span>专科 · 大数据技术</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section>
+    <h2>一、方案概览</h2>
+    <div class="card">
+      <b>数据口径：</b>月薪中位数 =（区间下限 + 上限）/ 2。原始数据存在两套薪资写法且互斥
+      ——「月薪最小/最大值」2860 条、「最低/最高年薪」497 条，后者统一除以 12 折算为月薪。
+      不统一口径直接作图，等于把年薪当月薪画，图会明显失真。
+    </div>
+    <table>
+      <tr><th width="60">编号</th><th>图表</th><th width="140">回答的问题</th></tr>
+      <tr><td>图1</td><td>城市机会与薪资（双轴组合）</td><td>去哪个城市</td></tr>
+      <tr><td>图2</td><td>学历 × 经验 薪资矩阵</td><td>我的起点值多少</td></tr>
+      <tr><td>图3</td><td>高频技能 Top15</td><td>学什么、简历写什么</td></tr>
+      <tr><td>图4</td><td>薪资分布与定位</td><td>我该要多少</td></tr>
+    </table>
+    <p style="margin-top:10px">四张图构成完整决策链：<strong>选城 → 定位 → 补技能 → 定薪资</strong>，
+    每一张都对应一个可执行的动作，而不是单纯的数据展示。</p>
+  </section>
+
+  <section>
+    <h2>二、四张图表与业务意义</h2>
+    
+  <section class="chart">
+    <h2>图1 ｜ 城市机会与薪资（柱 + 折线双轴）</h2>
+    <div class="svgbox"><svg viewBox="0 0 900 430" width="100%" xmlns="http://www.w3.org/2000/svg" style="font-family:PingFang SC, Microsoft YaHei, Segoe UI, sans-serif;max-width:900px"><text x="450.0" y="26.0" font-size="14" fill="#1f2933" text-anchor="middle" font-weight="bold">图1 ｜ 各城市岗位需求量与薪资中位数（样本≥30 条）</text><line x1="62.0" y1="352.0" x2="838.0" y2="352.0" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="356.0" font-size="11" fill="#0b63ce" text-anchor="end" font-weight="normal">0</text><line x1="62.0" y1="278.0" x2="838.0" y2="278.0" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="282.0" font-size="11" fill="#0b63ce" text-anchor="end" font-weight="normal">191</text><line x1="62.0" y1="204.0" x2="838.0" y2="204.0" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="208.0" font-size="11" fill="#0b63ce" text-anchor="end" font-weight="normal">383</text><line x1="62.0" y1="130.0" x2="838.0" y2="130.0" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="134.0" font-size="11" fill="#0b63ce" text-anchor="end" font-weight="normal">574</text><line x1="62.0" y1="56.0" x2="838.0" y2="56.0" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="60.0" font-size="11" fill="#0b63ce" text-anchor="end" font-weight="normal">766</text><text x="846.0" y="356.0" font-size="11" fill="#e8743b" text-anchor="start" font-weight="normal">0K</text><text x="846.0" y="282.0" font-size="11" fill="#e8743b" text-anchor="start" font-weight="normal">11K</text><text x="846.0" y="208.0" font-size="11" fill="#e8743b" text-anchor="start" font-weight="normal">22K</text><text x="846.0" y="134.0" font-size="11" fill="#e8743b" text-anchor="start" font-weight="normal">34K</text><text x="846.0" y="60.0" font-size="11" fill="#e8743b" text-anchor="start" font-weight="normal">45K</text><rect x="73.4" y="56.0" width="29.0" height="296.0" fill="#0b63ce" opacity="0.85" rx="2"/><text x="87.9" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">上海</text><text x="87.9" y="51.0" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">766</text><rect x="125.1" y="217.5" width="29.0" height="134.5" fill="#0b63ce" opacity="0.85" rx="2"/><text x="139.6" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">南京</text><text x="139.6" y="212.5" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">348</text><rect x="176.8" y="252.7" width="29.0" height="99.3" fill="#0b63ce" opacity="0.85" rx="2"/><text x="191.3" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">深圳</text><text x="191.3" y="247.7" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">257</text><rect x="228.6" y="260.0" width="29.0" height="92.0" fill="#0b63ce" opacity="0.85" rx="2"/><text x="243.1" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">北京</text><text x="243.1" y="255.0" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">238</text><rect x="280.3" y="263.1" width="29.0" height="88.9" fill="#0b63ce" opacity="0.85" rx="2"/><text x="294.8" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">成都</text><text x="294.8" y="258.1" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">230</text><rect x="332.0" y="289.0" width="29.0" height="63.0" fill="#0b63ce" opacity="0.85" rx="2"/><text x="346.5" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">昆山</text><text x="346.5" y="284.0" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">163</text><rect x="383.8" y="290.2" width="29.0" height="61.8" fill="#0b63ce" opacity="0.85" rx="2"/><text x="398.3" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">合肥</text><text x="398.3" y="285.2" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">160</text><rect x="435.5" y="298.7" width="29.0" height="53.3" fill="#0b63ce" opacity="0.85" rx="2"/><text x="450.0" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">武汉</text><text x="450.0" y="293.7" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">138</text><rect x="487.2" y="306.4" width="29.0" height="45.6" fill="#0b63ce" opacity="0.85" rx="2"/><text x="501.7" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">长沙</text><text x="501.7" y="301.4" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">118</text><rect x="539.0" y="312.2" width="29.0" height="39.8" fill="#0b63ce" opacity="0.85" rx="2"/><text x="553.5" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">广州</text><text x="553.5" y="307.2" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">103</text><rect x="590.7" y="321.9" width="29.0" height="30.1" fill="#0b63ce" opacity="0.85" rx="2"/><text x="605.2" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">杭州</text><text x="605.2" y="316.9" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">78</text><rect x="642.4" y="323.8" width="29.0" height="28.2" fill="#0b63ce" opacity="0.85" rx="2"/><text x="656.9" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">苏州</text><text x="656.9" y="318.8" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">73</text><rect x="694.2" y="325.0" width="29.0" height="27.0" fill="#0b63ce" opacity="0.85" rx="2"/><text x="708.7" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">沈阳</text><text x="708.7" y="320.0" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">70</text><rect x="745.9" y="325.3" width="29.0" height="26.7" fill="#0b63ce" opacity="0.85" rx="2"/><text x="760.4" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">南通</text><text x="760.4" y="320.3" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">69</text><rect x="797.6" y="325.3" width="29.0" height="26.7" fill="#0b63ce" opacity="0.85" rx="2"/><text x="812.1" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">嘉兴</text><text x="812.1" y="320.3" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="normal">69</text><line x1="87.9" y1="194.1" x2="139.6" y2="259.9" stroke="#e8743b" stroke-width="2.4"/><line x1="139.6" y1="259.9" x2="191.3" y2="220.4" stroke="#e8743b" stroke-width="2.4"/><line x1="191.3" y1="220.4" x2="243.1" y2="56.0" stroke="#e8743b" stroke-width="2.4"/><line x1="243.1" y1="56.0" x2="294.8" y2="253.3" stroke="#e8743b" stroke-width="2.4"/><line x1="294.8" y1="253.3" x2="346.5" y2="236.9" stroke="#e8743b" stroke-width="2.4"/><line x1="346.5" y1="236.9" x2="398.3" y2="269.8" stroke="#e8743b" stroke-width="2.4"/><line x1="398.3" y1="269.8" x2="450.0" y2="276.4" stroke="#e8743b" stroke-width="2.4"/><line x1="450.0" y1="276.4" x2="501.7" y2="171.1" stroke="#e8743b" stroke-width="2.4"/><line x1="501.7" y1="171.1" x2="553.5" y2="228.7" stroke="#e8743b" stroke-width="2.4"/><line x1="553.5" y1="228.7" x2="605.2" y2="213.9" stroke="#e8743b" stroke-width="2.4"/><line x1="605.2" y1="213.9" x2="656.9" y2="220.4" stroke="#e8743b" stroke-width="2.4"/><line x1="656.9" y1="220.4" x2="708.7" y2="187.6" stroke="#e8743b" stroke-width="2.4"/><line x1="708.7" y1="187.6" x2="760.4" y2="273.1" stroke="#e8743b" stroke-width="2.4"/><line x1="760.4" y1="273.1" x2="812.1" y2="217.2" stroke="#e8743b" stroke-width="2.4"/><circle cx="87.9" cy="194.1" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="87.9" y="185.1" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">24.0</text><circle cx="139.6" cy="259.9" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="139.6" y="250.9" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">14.0</text><circle cx="191.3" cy="220.4" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="191.3" y="211.4" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">20.0</text><circle cx="243.1" cy="56.0" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="243.1" y="47.0" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">45.0</text><circle cx="294.8" cy="253.3" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="294.8" y="244.3" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">15.0</text><circle cx="346.5" cy="236.9" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="346.5" y="227.9" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">17.5</text><circle cx="398.3" cy="269.8" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="398.3" y="260.8" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">12.5</text><circle cx="450.0" cy="276.4" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="450.0" y="267.4" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">11.5</text><circle cx="501.7" cy="171.1" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="501.7" y="162.1" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">27.5</text><circle cx="553.5" cy="228.7" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="553.5" y="219.7" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">18.8</text><circle cx="605.2" cy="213.9" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="605.2" y="204.9" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">21.0</text><circle cx="656.9" cy="220.4" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="656.9" y="211.4" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">20.0</text><circle cx="708.7" cy="187.6" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="708.7" y="178.6" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">25.0</text><circle cx="760.4" cy="273.1" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="760.4" y="264.1" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">12.0</text><circle cx="812.1" cy="217.2" r="4" fill="#fff" stroke="#e8743b" stroke-width="2.4"/><text x="812.1" y="208.2" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="normal">20.5</text><line x1="62.0" y1="352.0" x2="838.0" y2="352.0" stroke="#52606d" stroke-width="1.2"/><text x="54.0" y="42.0" font-size="11.5" fill="#0b63ce" text-anchor="end" font-weight="bold">岗位数量（条）</text><text x="846.0" y="42.0" font-size="11.5" fill="#e8743b" text-anchor="start" font-weight="bold">月薪中位数（K）</text><text x="450.0" y="412.0" font-size="11.5" fill="#52606d" text-anchor="middle" font-weight="normal">柱=岗位机会量（左轴）　折线=薪资水平（右轴）　两者错配处即策略空间</text></svg></div>
+    <table class="meta">
+      <tr><th width="88">图表类型</th><td>组合图：柱状图 + 折线图，双 Y 轴</td></tr>
+      <tr><th>X 轴</th><td>X 轴＝城市（按岗位数取前 15，样本 ≥ 30 条）</td></tr>
+      <tr><th>Y 轴</th><td>Y1（左）＝岗位数量／条　Y2（右）＝月薪中位数（K）</td></tr>
+    </table>
+    <div class="biz"><b>业务意义：</b>回答「去哪个城市」。把<strong>机会量</strong>和<strong>价值</strong>放在同一张图里，直接暴露两者的错配：岗位最多的城市不一定薪资最高。若只看岗位数选城市，很可能选到一个「好进但天花板低」的市场。</div>
+  </section>
+  <section class="chart">
+    <h2>图2 ｜ 学历 × 经验 薪资矩阵（分组柱状）</h2>
+    <div class="svgbox"><svg viewBox="0 0 900 440" width="100%" xmlns="http://www.w3.org/2000/svg" style="font-family:PingFang SC, Microsoft YaHei, Segoe UI, sans-serif;max-width:900px"><text x="450.0" y="26.0" font-size="14" fill="#1f2933" text-anchor="middle" font-weight="bold">图2 ｜ 学历 × 经验 的薪资矩阵（柱顶 n=样本量，样本&lt;20 不展示）</text><line x1="62.0" y1="356.0" x2="876.0" y2="356.0" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="360.0" font-size="11" fill="#52606d" text-anchor="end" font-weight="normal">0K</text><line x1="62.0" y1="282.5" x2="876.0" y2="282.5" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="286.5" font-size="11" fill="#52606d" text-anchor="end" font-weight="normal">12K</text><line x1="62.0" y1="209.0" x2="876.0" y2="209.0" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="213.0" font-size="11" fill="#52606d" text-anchor="end" font-weight="normal">25K</text><line x1="62.0" y1="135.5" x2="876.0" y2="135.5" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="139.5" font-size="11" fill="#52606d" text-anchor="end" font-weight="normal">38K</text><line x1="62.0" y1="62.0" x2="876.0" y2="62.0" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="66.0" font-size="11" fill="#52606d" text-anchor="end" font-weight="normal">50K</text><rect x="100.7" y="314.8" width="24.4" height="41.2" fill="#0b63ce" opacity="0.9" rx="2"/><text x="112.9" y="298.8" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="bold">7.0K</text><text x="112.9" y="309.8" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=45</text><text x="112.9" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">在校生/应届生</text><rect x="176.0" y="314.8" width="24.4" height="41.2" fill="#e8743b" opacity="0.9" rx="2"/><text x="188.2" y="298.8" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="bold">7.0K</text><text x="188.2" y="309.8" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=74</text><rect x="202.4" y="311.9" width="24.4" height="44.1" fill="#0b63ce" opacity="0.9" rx="2"/><text x="214.6" y="295.9" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="bold">7.5K</text><text x="214.6" y="306.9" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=184</text><text x="214.6" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">无需经验</text><rect x="277.7" y="288.4" width="24.4" height="67.6" fill="#e8743b" opacity="0.9" rx="2"/><text x="290.0" y="272.4" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="bold">11.5K</text><text x="290.0" y="283.4" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=171</text><rect x="304.2" y="261.9" width="24.4" height="94.1" fill="#0b63ce" opacity="0.9" rx="2"/><text x="316.4" y="245.9" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="bold">16.0K</text><text x="316.4" y="256.9" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=246</text><rect x="330.6" y="235.5" width="24.4" height="120.5" fill="#7b5ea7" opacity="0.9" rx="2"/><text x="342.8" y="219.5" font-size="9.5" fill="#7b5ea7" text-anchor="middle" font-weight="bold">20.5K</text><text x="342.8" y="230.5" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=93</text><text x="316.4" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">1年经验</text><rect x="379.5" y="273.7" width="24.4" height="82.3" fill="#e8743b" opacity="0.9" rx="2"/><text x="391.7" y="257.7" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="bold">14.0K</text><text x="391.7" y="268.7" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=69</text><rect x="405.9" y="303.1" width="24.4" height="52.9" fill="#0b63ce" opacity="0.9" rx="2"/><text x="418.1" y="287.1" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="bold">9.0K</text><text x="418.1" y="298.1" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=24</text><text x="418.1" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">2年经验</text><rect x="481.2" y="253.1" width="24.4" height="102.9" fill="#e8743b" opacity="0.9" rx="2"/><text x="493.5" y="237.1" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="bold">17.5K</text><text x="493.5" y="248.1" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=191</text><rect x="507.7" y="256.0" width="24.4" height="100.0" fill="#0b63ce" opacity="0.9" rx="2"/><text x="519.9" y="240.0" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="bold">17.0K</text><text x="519.9" y="251.0" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=944</text><rect x="534.1" y="142.8" width="24.4" height="213.2" fill="#7b5ea7" opacity="0.9" rx="2"/><text x="546.3" y="126.8" font-size="9.5" fill="#7b5ea7" text-anchor="middle" font-weight="bold">36.2K</text><text x="546.3" y="137.8" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=140</text><text x="519.9" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">3-4年经验</text><rect x="583.0" y="253.1" width="24.4" height="102.9" fill="#e8743b" opacity="0.9" rx="2"/><text x="595.2" y="237.1" font-size="9.5" fill="#e8743b" text-anchor="middle" font-weight="bold">17.5K</text><text x="595.2" y="248.1" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=67</text><rect x="609.4" y="235.5" width="24.4" height="120.5" fill="#0b63ce" opacity="0.9" rx="2"/><text x="621.6" y="219.5" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="bold">20.5K</text><text x="621.6" y="230.5" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=939</text><text x="621.6" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">5-7年经验</text><rect x="711.2" y="62.0" width="24.4" height="294.0" fill="#0b63ce" opacity="0.9" rx="2"/><text x="723.4" y="46.0" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="bold">50.0K</text><text x="723.4" y="57.0" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=22</text><rect x="737.6" y="229.6" width="24.4" height="126.4" fill="#7b5ea7" opacity="0.9" rx="2"/><text x="749.8" y="213.6" font-size="9.5" fill="#7b5ea7" text-anchor="middle" font-weight="bold">21.5K</text><text x="749.8" y="224.6" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=69</text><text x="723.4" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">8-9年经验</text><rect x="812.9" y="91.4" width="24.4" height="264.6" fill="#0b63ce" opacity="0.9" rx="2"/><text x="825.1" y="75.4" font-size="9.5" fill="#0b63ce" text-anchor="middle" font-weight="bold">45.0K</text><text x="825.1" y="86.4" font-size="8.5" fill="#52606d" text-anchor="middle" font-weight="normal">n=67</text><text x="825.1" y="374.0" font-size="11" fill="#1f2933" text-anchor="middle" font-weight="normal">10年以上经验</text><line x1="62.0" y1="356.0" x2="876.0" y2="356.0" stroke="#52606d" stroke-width="1.2"/><text x="54.0" y="48.0" font-size="11.5" fill="#52606d" text-anchor="end" font-weight="bold">月薪中位数（K）</text><rect x="666.0" y="36.0" width="12.0" height="12.0" fill="#e8743b" opacity="0.9" rx="2"/><text x="683.0" y="46.0" font-size="11.5" fill="#1f2933" text-anchor="start" font-weight="normal">大专</text><rect x="738.0" y="36.0" width="12.0" height="12.0" fill="#0b63ce" opacity="0.9" rx="2"/><text x="755.0" y="46.0" font-size="11.5" fill="#1f2933" text-anchor="start" font-weight="normal">本科</text><rect x="810.0" y="36.0" width="12.0" height="12.0" fill="#7b5ea7" opacity="0.9" rx="2"/><text x="827.0" y="46.0" font-size="11.5" fill="#1f2933" text-anchor="start" font-weight="normal">硕士</text><text x="450.0" y="420.0" font-size="11.5" fill="#52606d" text-anchor="middle" font-weight="normal">X 轴＝工作经验要求（有序档位）　Y 轴＝月薪中位数　分组＝学历要求</text></svg></div>
+    <table class="meta">
+      <tr><th width="88">图表类型</th><td>分组柱状图（有序分类 X 轴）</td></tr>
+      <tr><th>X 轴</th><td>X 轴＝工作经验要求（在校生/应届生 → 10年以上，共 8 档）</td></tr>
+      <tr><th>Y 轴</th><td>Y 轴＝月薪中位数（K）　分组＝学历（大专／本科／硕士）</td></tr>
+    </table>
+    <div class="biz"><b>业务意义：</b>回答「我的起点值多少、往哪走涨得快」。经验是有序档位而非连续数值，用柱状而非折线，才能诚实呈现<strong>台阶式跃迁</strong>；柱顶标注样本量，避免小样本极值误导判断。</div>
+  </section>
+  <section class="chart">
+    <h2>图3 ｜ 高频技能 Top15（横向条形）</h2>
+    <div class="svgbox"><svg viewBox="0 0 900 501" width="100%" xmlns="http://www.w3.org/2000/svg" style="font-family:PingFang SC, Microsoft YaHei, Segoe UI, sans-serif;max-width:900px"><text x="450.0" y="26.0" font-size="14" fill="#1f2933" text-anchor="middle" font-weight="bold">图3 ｜ 高频技能 Top15：提及率与对应薪资中位数</text><text x="450.0" y="46.0" font-size="11.5" fill="#52606d" text-anchor="middle" font-weight="normal">深蓝＝薪资高于全局中位 18.0K（有溢价）　灰＝低于（属基础盘，不写就吃亏）</text><text x="106.0" y="77.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">数据仓库</text><rect x="116.0" y="65.0" width="177.4" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="301.4" y="78.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">11.0%　18.8K　(n=369)</text><text x="106.0" y="104.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">HBase</text><rect x="116.0" y="92.0" width="185.6" height="17.0" fill="#9aa5b1" opacity="0.88" rx="2"/><text x="309.6" y="105.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">11.5%　17.5K　(n=386)</text><text x="106.0" y="131.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">Kafka</text><rect x="116.0" y="119.0" width="209.2" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="333.2" y="132.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">13.0%　18.0K　(n=435)</text><text x="106.0" y="158.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">Hive</text><rect x="116.0" y="146.0" width="240.4" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="364.4" y="159.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">14.9%　18.0K　(n=500)</text><text x="106.0" y="185.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">Redis</text><rect x="116.0" y="173.0" width="243.8" height="17.0" fill="#9aa5b1" opacity="0.88" rx="2"/><text x="367.8" y="186.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">15.1%　17.5K　(n=507)</text><text x="106.0" y="212.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">BI/报表</text><rect x="116.0" y="200.0" width="258.7" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="382.7" y="213.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">16.0%　18.8K　(n=538)</text><text x="106.0" y="239.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">Spark</text><rect x="116.0" y="227.0" width="296.2" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="420.2" y="240.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">18.3%　18.0K　(n=616)</text><text x="106.0" y="266.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">Linux</text><rect x="116.0" y="254.0" width="311.1" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="435.1" y="267.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">19.3%　18.8K　(n=647)</text><text x="106.0" y="293.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">Hadoop</text><rect x="116.0" y="281.0" width="322.7" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="446.7" y="294.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">20.0%　18.0K　(n=671)</text><text x="106.0" y="320.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">ElasticSearch</text><rect x="116.0" y="308.0" width="353.0" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="477.0" y="321.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">21.9%　18.0K　(n=734)</text><text x="106.0" y="347.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">Python</text><rect x="116.0" y="335.0" width="363.5" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="487.5" y="348.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">22.5%　18.0K　(n=756)</text><text x="106.0" y="374.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">机器学习</text><rect x="116.0" y="362.0" width="393.8" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="517.8" y="375.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">24.4%　18.8K　(n=819)</text><text x="106.0" y="401.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">MySQL</text><rect x="116.0" y="389.0" width="439.5" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="563.5" y="402.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">27.2%　18.0K　(n=914)</text><text x="106.0" y="428.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">Java</text><rect x="116.0" y="416.0" width="646.3" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="770.3" y="429.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">40.0%　18.0K　(n=1344)</text><text x="106.0" y="455.0" font-size="11.5" fill="#1f2933" text-anchor="end" font-weight="bold">SQL</text><rect x="116.0" y="443.0" width="654.0" height="17.0" fill="#0b63ce" opacity="0.88" rx="2"/><text x="778.0" y="456.0" font-size="10.5" fill="#52606d" text-anchor="start" font-weight="normal">40.5%　18.0K　(n=1360)</text><text x="116.0" y="485.0" font-size="11.5" fill="#52606d" text-anchor="start" font-weight="normal">条形长度＝JD 提及率　条尾标注＝该技能岗位薪资中位数与样本量</text></svg></div>
+    <table class="meta">
+      <tr><th width="88">图表类型</th><td>横向条形图（排名 + 对比）</td></tr>
+      <tr><th>X 轴</th><td>Y 轴＝技能名称（按提及率升序排列）</td></tr>
+      <tr><th>Y 轴</th><td>X 轴＝职位描述中的提及率（%）　条尾标注＝薪资中位数与样本量</td></tr>
+    </table>
+    <div class="biz"><b>业务意义：</b>回答「学什么」。用颜色区分技能含金量：深蓝＝高于全局中位（学了有溢价），灰＝低于（属基础盘，不写进简历就吃亏）。据此把技能分成<strong>必写项</strong>和<strong>差异项</strong>两层。</div>
+  </section>
+  <section class="chart">
+    <h2>图4 ｜ 薪资分布与定位（直方图 + 定位线）</h2>
+    <div class="svgbox"><svg viewBox="0 0 900 410" width="100%" xmlns="http://www.w3.org/2000/svg" style="font-family:PingFang SC, Microsoft YaHei, Segoe UI, sans-serif;max-width:900px"><text x="450.0" y="26.0" font-size="14" fill="#1f2933" text-anchor="middle" font-weight="bold">图4 ｜ 大数据岗位薪资分布（右偏：谈薪用中位数，不用均值）</text><line x1="62.0" y1="334.0" x2="876.0" y2="334.0" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="338.0" font-size="11" fill="#52606d" text-anchor="end" font-weight="normal">0</text><line x1="62.0" y1="265.5" x2="876.0" y2="265.5" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="269.5" font-size="11" fill="#52606d" text-anchor="end" font-weight="normal">68</text><line x1="62.0" y1="197.0" x2="876.0" y2="197.0" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="201.0" font-size="11" fill="#52606d" text-anchor="end" font-weight="normal">137</text><line x1="62.0" y1="128.5" x2="876.0" y2="128.5" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="132.5" font-size="11" fill="#52606d" text-anchor="end" font-weight="normal">206</text><line x1="62.0" y1="60.0" x2="876.0" y2="60.0" stroke="#e4e7eb" stroke-width="1"/><text x="54.0" y="64.0" font-size="11" fill="#52606d" text-anchor="end" font-weight="normal">275</text><rect x="151.2" y="266.2" width="7.1" height="67.8" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="159.2" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="167.3" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="175.3" y="221.4" width="7.1" height="112.6" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="183.4" y="139.7" width="7.1" height="194.3" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="191.5" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="199.5" y="289.2" width="7.1" height="44.8" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="207.6" y="294.1" width="7.1" height="39.9" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="215.6" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="223.7" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="231.7" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="239.8" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="247.9" y="281.2" width="7.1" height="52.8" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="255.9" y="265.3" width="7.1" height="68.7" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="264.0" y="175.6" width="7.1" height="158.4" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="272.0" y="219.4" width="7.1" height="114.6" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="280.1" y="226.4" width="7.1" height="107.6" fill="#e8743b" opacity="0.8" rx="1"/><rect x="288.2" y="265.3" width="7.1" height="68.7" fill="#e8743b" opacity="0.8" rx="1"/><rect x="296.2" y="266.2" width="7.1" height="67.8" fill="#e8743b" opacity="0.8" rx="1"/><rect x="304.3" y="242.3" width="7.1" height="91.7" fill="#e8743b" opacity="0.8" rx="1"/><rect x="312.3" y="334.0" width="7.1" height="0.0" fill="#e8743b" opacity="0.8" rx="1"/><rect x="320.4" y="199.5" width="7.1" height="134.5" fill="#e8743b" opacity="0.8" rx="1"/><rect x="328.5" y="312.1" width="7.1" height="21.9" fill="#e8743b" opacity="0.8" rx="1"/><rect x="336.5" y="266.2" width="7.1" height="67.8" fill="#e8743b" opacity="0.8" rx="1"/><rect x="344.6" y="84.9" width="7.1" height="249.1" fill="#e8743b" opacity="0.8" rx="1"/><rect x="352.6" y="266.2" width="7.1" height="67.8" fill="#e8743b" opacity="0.8" rx="1"/><rect x="360.7" y="265.3" width="7.1" height="68.7" fill="#e8743b" opacity="0.8" rx="1"/><rect x="368.8" y="334.0" width="7.1" height="0.0" fill="#e8743b" opacity="0.8" rx="1"/><rect x="376.8" y="312.1" width="7.1" height="21.9" fill="#e8743b" opacity="0.8" rx="1"/><rect x="384.9" y="113.8" width="7.1" height="220.2" fill="#e8743b" opacity="0.8" rx="1"/><rect x="392.9" y="183.5" width="7.1" height="150.5" fill="#e8743b" opacity="0.8" rx="1"/><rect x="401.0" y="291.2" width="7.1" height="42.8" fill="#e8743b" opacity="0.8" rx="1"/><rect x="409.1" y="229.4" width="7.1" height="104.6" fill="#e8743b" opacity="0.8" rx="1"/><rect x="417.1" y="334.0" width="7.1" height="0.0" fill="#e8743b" opacity="0.8" rx="1"/><rect x="425.2" y="171.6" width="7.1" height="162.4" fill="#e8743b" opacity="0.8" rx="1"/><rect x="433.2" y="334.0" width="7.1" height="0.0" fill="#e8743b" opacity="0.8" rx="1"/><rect x="441.3" y="334.0" width="7.1" height="0.0" fill="#e8743b" opacity="0.8" rx="1"/><rect x="449.4" y="265.3" width="7.1" height="68.7" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="457.4" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="465.5" y="60.0" width="7.1" height="274.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="473.5" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="481.6" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="489.6" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="497.7" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="505.8" y="228.4" width="7.1" height="105.6" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="513.8" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="521.9" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="529.9" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="538.0" y="311.1" width="7.1" height="22.9" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="546.1" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="554.1" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="562.2" y="286.2" width="7.1" height="47.8" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="570.2" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="578.3" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="586.4" y="316.1" width="7.1" height="17.9" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="594.4" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="602.5" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="610.5" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="618.6" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="626.7" y="267.2" width="7.1" height="66.8" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="634.7" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="642.8" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="650.8" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="658.9" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="667.0" y="265.3" width="7.1" height="68.7" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="675.0" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="683.1" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="691.1" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="699.2" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="707.3" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="715.3" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="723.4" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="731.4" y="322.0" width="7.1" height="12.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="739.5" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="747.5" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="755.6" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="763.7" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="771.7" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="779.8" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="787.8" y="267.2" width="7.1" height="66.8" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="795.9" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="804.0" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="812.0" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="820.1" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="828.1" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="836.2" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="844.3" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="852.3" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="860.4" y="334.0" width="7.1" height="0.0" fill="#0f9d8a" opacity="0.8" rx="1"/><rect x="868.4" y="242.3" width="7.1" height="91.7" fill="#0f9d8a" opacity="0.8" rx="1"/><line x1="62.0" y1="334.0" x2="62.0" y2="338.0" stroke="#52606d" stroke-width="1"/><text x="62.0" y="352.0" font-size="11" fill="#52606d" text-anchor="middle" font-weight="normal">0K</text><line x1="223.2" y1="334.0" x2="223.2" y2="338.0" stroke="#52606d" stroke-width="1"/><text x="223.2" y="352.0" font-size="11" fill="#52606d" text-anchor="middle" font-weight="normal">10K</text><line x1="384.4" y1="334.0" x2="384.4" y2="338.0" stroke="#52606d" stroke-width="1"/><text x="384.4" y="352.0" font-size="11" fill="#52606d" text-anchor="middle" font-weight="normal">20K</text><line x1="545.6" y1="334.0" x2="545.6" y2="338.0" stroke="#52606d" stroke-width="1"/><text x="545.6" y="352.0" font-size="11" fill="#52606d" text-anchor="middle" font-weight="normal">30K</text><line x1="706.8" y1="334.0" x2="706.8" y2="338.0" stroke="#52606d" stroke-width="1"/><text x="706.8" y="352.0" font-size="11" fill="#52606d" text-anchor="middle" font-weight="normal">40K</text><line x1="867.9" y1="334.0" x2="867.9" y2="338.0" stroke="#52606d" stroke-width="1"/><text x="867.9" y="352.0" font-size="11" fill="#52606d" text-anchor="middle" font-weight="normal">50K</text><line x1="352.1" y1="60.0" x2="352.1" y2="334.0" stroke="#e8743b" stroke-width="2" stroke-dasharray="5,4"/><text x="357.1" y="74.0" font-size="10.5" fill="#e8743b" text-anchor="start" font-weight="bold">全局中位 18.0K</text><line x1="295.7" y1="60.0" x2="295.7" y2="334.0" stroke="#7b5ea7" stroke-width="2" stroke-dasharray="5,4"/><text x="300.7" y="74.0" font-size="10.5" fill="#7b5ea7" text-anchor="start" font-weight="bold">大专中位 14.5K</text><line x1="182.9" y1="60.0" x2="182.9" y2="334.0" stroke="#c0392b" stroke-width="2" stroke-dasharray="5,4"/><text x="187.9" y="74.0" font-size="10.5" fill="#c0392b" text-anchor="start" font-weight="bold">无经验中位 7.5K</text><line x1="62.0" y1="334.0" x2="876.0" y2="334.0" stroke="#52606d" stroke-width="1.2"/><text x="54.0" y="46.0" font-size="11.5" fill="#52606d" text-anchor="end" font-weight="bold">岗位数量</text><text x="450.0" y="390.0" font-size="11.5" fill="#52606d" text-anchor="middle" font-weight="normal">X 轴＝月薪中位数　Y 轴＝岗位数量　P25–P75 区间：13.3K – 24.0K（橙色柱）</text></svg></div>
+    <table class="meta">
+      <tr><th width="88">图表类型</th><td>直方图 + 参考线</td></tr>
+      <tr><th>X 轴</th><td>X 轴＝月薪中位数（0.5K 一档分箱）</td></tr>
+      <tr><th>Y 轴</th><td>Y 轴＝该区间岗位数量　参考线＝全局／大专／无经验中位</td></tr>
+    </table>
+    <div class="biz"><b>业务意义：</b>回答「我该要多少」。前三张图都在讲分组中位，只有分布图能让人看到<strong>自己在市场里的位置</strong>。P25–P75 阴影区即大多数人的落点，期望薪资应锚定在自己所处分段，而不是全场中位数。</div>
+  </section>
+  </section>
+
+  <section class="chart">
+    <h2>三、matplotlib 实现代码</h2>
+
+    <h3>3.1 中文字体设置（最先要解决的一步）</h3>
+    <p>matplotlib 默认字体不含中文字形，且不自动回退系统字体，中文会全部显示成「□□□」。
+    下面这段会<strong>先探测系统里真实存在的中文字体</strong>再设置，避免出现「名字写了但没装」的无效配置。</p>
+    <pre><code>def setup_chinese_font():
+    &quot;&quot;&quot;
+    让 matplotlib 正确显示中文。
+
+    常见现象：图中所有中文变成&quot;□□□&quot;方框。
+    根因：matplotlib 默认字体不含中文字形，且它不会自动回退到系统字体。
+
+    本函数做两件事：
+      1) 从系统已安装字体里挑一个真正存在的中文字体，避免&quot;名字写了但没装&quot;；
+      2) 关闭 unicode_minus，否则负号也会变成方框（画相关系数/差异值时必踩）。
+    &quot;&quot;&quot;
+    import matplotlib
+    matplotlib.use(&quot;Agg&quot;)           # 无界面环境（服务器/IDE）也能保存图片
+    import matplotlib.pyplot as plt
+    from matplotlib import font_manager
+
+    # 候选字体按优先级排列：Windows 常见 -&gt; macOS -&gt; Linux
+    candidates = [&quot;Microsoft YaHei&quot;, &quot;SimHei&quot;, &quot;SimSun&quot;, &quot;DengXian&quot;,
+                  &quot;PingFang SC&quot;, &quot;Heiti SC&quot;, &quot;Arial Unicode MS&quot;,
+                  &quot;Noto Sans CJK SC&quot;, &quot;Source Han Sans SC&quot;, &quot;WenQuanYi Zen Hei&quot;]
+
+    # 取系统里真实存在的字体名集合
+    available = {f.name for f in font_manager.fontManager.ttflist}
+    picked = [f for f in candidates if f in available]
+
+    if picked:
+        plt.rcParams[&quot;font.sans-serif&quot;] = picked
+        print(f&quot;[字体] 已选中文字体：{picked[0]}&quot;)
+    else:
+        # 一个都没找到：仍然按候选顺序设置，matplotlib 会尝试回退
+        plt.rcParams[&quot;font.sans-serif&quot;] = candidates
+        print(&quot;[字体][警告] 未在系统中找到常见中文字体，图中可能显示方框。&quot;)
+        print(&quot;           Windows 建议安装「微软雅黑」；或手动指定字体文件路径：&quot;)
+        print(&quot;           from matplotlib import font_manager&quot;)
+        print(&quot;           font_manager.fontManager.addfont(&#x27;C:/Windows/Fonts/msyh.ttc&#x27;)&quot;)
+
+    plt.rcParams[&quot;axes.unicode_minus&quot;] = False   # 修复负号显示为方框
+    plt.rcParams[&quot;figure.dpi&quot;] = 120             # 屏幕预览清晰度
+    plt.rcParams[&quot;savefig.dpi&quot;] = 200            # 存盘清晰度（网页/简历够用）
+    plt.rcParams[&quot;savefig.bbox&quot;] = &quot;tight&quot;       # 防止标签被裁掉
+    return plt
+
+
+# ==============================================================================
+# 二、数据读取（双引擎：pandas 优先，标准库兜底）
+# ==============================================================================
+def read_table_pandas(path, limit=None):
+    &quot;&quot;&quot;引擎 A：pandas 读取（需 pandas + openpyxl）。返回 (表头list, 数据list-of-dict)。&quot;&quot;&quot;
+    import pandas as pd
+    df = pd.read_excel(path)
+    df.columns = [str(c).strip() for c in df.columns]
+    if limit:
+        df = df.head(limit)
+    df = df.fillna(&quot;&quot;)
+    rows = df.astype(str).to_dict(&quot;records&quot;)
+    return list(df.columns), rows
+
+
+def read_table_stdlib(path, limit=None):
+    &quot;&quot;&quot;
+    引擎 B：纯标准库解析 xlsx（无需任何第三方库）。
+
+    原理：xlsx 本质是一个 zip 包，里面是 XML。
+      xl/sharedStrings.xml  存放所有字符串（单元格用下标引用它）
+      xl/worksheets/sheet1.xml  存放单元格的引用与值
+    用 zipfile + ElementTree 就能读出来。这也是面试可以讲的一个点。
+    &quot;&quot;&quot;
+    from xml.etree import ElementTree as ET
+    NS = &quot;{http://schemas.openxmlformats.org/spreadsheetml/2006/main}&quot;
+    NSR = &quot;{http://schemas.openxmlformats.org/officeDocument/2006/relationships}&quot;
+
+    def col_to_idx(ref):
+        &quot;&quot;&quot;把 Excel 列标 &#x27;AB12&#x27; 转成从 0 开始的列下标。&quot;&quot;&quot;
+        m = re.match(r&quot;([A-Z]+)&quot;, ref)
+        n = 0
+        for ch in m.group(1):
+            n = n * 26 + (ord(ch) - 64)
+        return n - 1
+
+    z = zipfile.ZipFile(path)
+    # 1) 共享字符串池
+    shared = []
+    if &quot;xl/sharedStrings.xml&quot; in z.namelist():
+        root = ET.fromstring(z.read(&quot;xl/sharedStrings.xml&quot;))
+        for si in root.findall(f&quot;{NS}si&quot;):
+            shared.append(&quot;&quot;.join(t.text or &quot;&quot; for t in si.iter(f&quot;{NS}t&quot;)))
+    # 2) 定位第一个工作表
+    wb = ET.fromstring(z.read(&quot;xl/workbook.xml&quot;))
+    rels = ET.fromstring(z.read(&quot;xl/_rels/workbook.xml.rels&quot;))
+    rid2t = {r.get(&quot;Id&quot;): r.get(&quot;Target&quot;) for r in rels}
+    sheet_path = None
+    for sh in wb.iter(f&quot;{NS}sheet&quot;):
+        tgt = rid2t[sh.get(f&quot;{NSR}id&quot;)]
+        sheet_path = tgt if tgt.startswith(&quot;xl/&quot;) else &quot;xl/&quot; + tgt.lstrip(&quot;/&quot;)
+        break
+    # 3) 逐行读单元格
+    grid = []
+    rroot = ET.fromstring(z.read(sheet_path))
+    for row in rroot.iter(f&quot;{NS}row&quot;):
+        cells = {}
+        for c in row.findall(f&quot;{NS}c&quot;):
+            t = c.get(&quot;t&quot;)
+            v = c.find(f&quot;{NS}v&quot;)
+            isel = c.find(f&quot;{NS}is&quot;)
+            if t == &quot;s&quot; and v is not None:            # 共享字符串
+                val = shared[int(v.text)]
+            elif t == &quot;inlineStr&quot; and isel is not None:  # 内联字符串
+                val = &quot;&quot;.join(x.text or &quot;&quot; for x in isel.iter(f&quot;{NS}t&quot;))
+            elif v is not None:                       # 数字 / 日期序列值
+                val = v.text
+            else:
+                val = &quot;&quot;
+            idx = col_to_idx(c.get(&quot;r&quot;)) if c.get(&quot;r&quot;) else len(cells)
+            cells[idx] = val
+        grid.append(cells)
+
+    if not grid:
+        return [], []
+    width = max((max(r.keys()) + 1) if r else 0 for r in grid)
+    table = [[r.get(i, &quot;&quot;) for i in range(width)] for r in grid]
+    header = [h.strip() for h in table[0]]
+    body = table[1:]
+    if limit:
+        body = body[:limit]
+    rows = [dict(zip(header, r)) for r in body]
+    return header, rows
+
+
+def load_data(path, limit=None):
+    &quot;&quot;&quot;按可用性自动选择读取引擎，返回 list-of-dict。&quot;&quot;&quot;
+    if not os.path.exists(path):
+        sys.exit(f&quot;[失败] 找不到数据文件：{path}\n       请用 --input 指定正确路径。&quot;)
+    try:
+        header, rows = read_table_pandas(path, limit)
+        engine = &quot;pandas&quot;
+    except ImportError:
+        header, rows = read_table_stdlib(path, limit)
+        engine = &quot;标准库（未装 pandas/openpyxl，功能正常）&quot;
+    except Exception as e:                      # pandas 读失败也退回标准库
+        print(f&quot;[提示] pandas 读取失败（{e}），改用标准库解析。&quot;)
+        header, rows = read_table_stdlib(path, limit)
+        engine = &quot;标准库（pandas 读取异常，已回退）&quot;
+    print(f&quot;[读取] {os.path.basename(path)} ｜ 引擎 {engine} ｜ {len(rows)} 行 × {len(header)} 列&quot;)
+    return header, rows
+
+
+# ==============================================================================
+# 三、字段标准化：把 21 个原始字段整理成分析用的“宽表记录”
+# ==============================================================================
+def to_number(s):
+    &quot;&quot;&quot;安全转数字，失败返回 None（不要用 float() 裸转，遇到空串会抛异常）。&quot;&quot;&quot;
+    try:
+        v = float(str(s).strip())
+        return v
+    except Exception:
+        return None
+
+
+def clean_text(s):
+    &quot;&quot;&quot;清洗文本：去首尾空白 + 修复转义符。
+
+    这份数据里公司标签/经验列存在 &#x27;在校生\\/应届生&#x27; 这种转义写法，
+    不处理的话同一个值会被当成两个类别，分组统计直接错。
+    &quot;&quot;&quot;
+    s = str(s or &quot;&quot;).strip()
+    return s.replace(&quot;\\/&quot;, &quot;/&quot;)
+
+
+def build_records(rows):
+    &quot;&quot;&quot;
+    把原始行整理成分析记录列表。核心是【薪资口径统一】。
+
+    这份数据的薪资有两种写法，且互斥（月薪有值则年薪为空，反之亦然）：
+      - 月薪最小值 / 月薪最大值   （2860 条，单位：元/月）
+      - 最低年薪   / 最高年薪     （497 条， 单位：元/年）
+    不统一就作图，等于把年薪当成月薪画，图会离谱到一眼假。
+    统一口径：一律折算为【月薪中位数 = (下限+上限)/2】。
+    &quot;&quot;&quot;
+    recs = []
+    skipped = 0
+    for r in rows:
+        lo = to_number(r.get(&quot;月薪最小值&quot;, &quot;&quot;))
+        hi = to_number(r.get(&quot;月薪最大值&quot;, &quot;&quot;))
+        if lo and hi and lo &gt; 0:
+            mid = (lo + hi) / 2
+        else:
+            ylo = to_number(r.get(&quot;最低年薪&quot;, &quot;&quot;))
+            yhi = to_number(r.get(&quot;最高年薪&quot;, &quot;&quot;))
+            if ylo and yhi and ylo &gt; 0:
+                mid = (ylo + yhi) / 2 / 12      # 年薪 -&gt; 月薪
+            else:
+                skipped += 1
+                continue                        # 两个口径都没有，无法参与薪资分析
+        recs.append({
+            &quot;city&quot;: clean_text(r.get(&quot;城市&quot;, &quot;&quot;)),
+            &quot;edu&quot;: clean_text(r.get(&quot;学历要求&quot;, &quot;&quot;)),
+            &quot;exp&quot;: clean_text(r.get(&quot;工作经验要求&quot;, &quot;&quot;)),
+            &quot;ctype&quot;: clean_text(r.get(&quot;公司类型&quot;, &quot;&quot;)),
+            &quot;scale&quot;: clean_text(r.get(&quot;公司规模&quot;, &quot;&quot;)),
+            &quot;desc&quot;: clean_text(r.get(&quot;职位描述或任职要求&quot;, &quot;&quot;)).lower(),
+            &quot;mid&quot;: float(mid),
+        })
+    print(f&quot;[整理] 有效薪资样本 {len(recs)} 条，因薪资缺失剔除 {skipped} 条&quot;)
+    return recs
+
+
+def median(xs):
+    &quot;&quot;&quot;中位数（不依赖 numpy，避免多装一个库）。&quot;&quot;&quot;
+    if not xs:
+        return None
+    s = sorted(xs)
+    n = len(s)
+    return s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2
+
+
+# ==============================================================================
+# 四、图1：城市机会与薪资（柱 + 折线双轴）
+# ==============================================================================
+def chart_city_salary(plt, recs, outdir):
+    &quot;&quot;&quot;
+    为什么要双轴：
+      岗位数（机会量）和薪资（价值）单位不同、量级不同，画在一根轴上会互相压扁。
+      双轴才能让&quot;岗位最多的城市 ≠ 薪资最高的城市&quot;这个结论一眼看出来。
+    &quot;&quot;&quot;
+    by = defaultdict(list)
+    for r in recs:
+        if r[&quot;city&quot;]:
+            by[r[&quot;city&quot;]].append(r[&quot;mid&quot;])
+    # 样本量门槛 + 取岗位数前 15
+    stat = [(c, len(v), median(v)) for c, v in by.items() if len(v) &gt;= MIN_CITY_N]
+    stat.sort(key=lambda t: -t[1])
+    stat = stat[:15]
+    if not stat:
+        print(&quot;[跳过] 图1：没有满足样本量门槛的城市。&quot;)
+        return None
+
+    cities = [s[0] for s in stat]
+    counts = [s[1] for s in stat]
+    meds = [s[2] / 1000 for s in stat]          # 转成 K，轴标签更短
+
+    fig, ax1 = plt.subplots(figsize=(12, 5.6))
+    ax1.bar(cities, counts, color=C_MAIN, alpha=.85, label=&quot;岗位数量&quot;)
+    ax1.set_ylabel(&quot;岗位数量（条）&quot;, color=C_MAIN, fontsize=12)
+    ax1.set_xlabel(&quot;城市&quot;)
+    ax1.tick_params(axis=&quot;y&quot;, labelcolor=C_MAIN)
+    ax1.tick_params(axis=&quot;x&quot;, rotation=30)
+    for lbl in ax1.get_xticklabels():
+        lbl.set_ha(&quot;right&quot;)
+
+    ax2 = ax1.twinx()                            # 共享 X 轴，新增右侧 Y 轴
+    ax2.plot(cities, meds, color=C_ACCENT, marker=&quot;o&quot;,
+             linewidth=2.4, markersize=6, label=&quot;月薪中位数&quot;)
+    ax2.set_ylabel(&quot;月薪中位数（K/月）&quot;, color=C_ACCENT, fontsize=12)
+    ax2.tick_params(axis=&quot;y&quot;, labelcolor=C_ACCENT)
+    # 每个点标数值，避免读者去猜刻度
+    for i, v in enumerate(meds):
+        ax2.annotate(f&quot;{v:.1f}&quot;, (i, v), textcoords=&quot;offset points&quot;,
+                     xytext=(0, 8), ha=&quot;center&quot;, fontsize=9, color=C_ACCENT)
+
+    ax1.set_title(&quot;图1 ｜ 各城市岗位需求量与薪资中位数（样本≥%d 条）&quot; % MIN_CITY_N,
+                  fontsize=14, fontweight=&quot;bold&quot;)
+    ax1.grid(axis=&quot;y&quot;, alpha=.25)
+    fig.tight_layout()
+    path = os.path.join(outdir, &quot;city_salary.png&quot;)
+    fig.savefig(path)
+    plt.close(fig)
+    print(f&quot;[保存] {path}&quot;)
+    return path</code></pre>
+
+    <h3>3.2 四张图表的绘制函数</h3>
+    <p>完整可运行脚本见 <code>job_visualization.py</code>，含数据读取双引擎（pandas / 标准库降级）
+    与缺失 matplotlib 时的文本兜底。</p>
+    <pre><code>def chart_city_salary(plt, recs, outdir):
+    &quot;&quot;&quot;
+    为什么要双轴：
+      岗位数（机会量）和薪资（价值）单位不同、量级不同，画在一根轴上会互相压扁。
+      双轴才能让&quot;岗位最多的城市 ≠ 薪资最高的城市&quot;这个结论一眼看出来。
+    &quot;&quot;&quot;
+    by = defaultdict(list)
+    for r in recs:
+        if r[&quot;city&quot;]:
+            by[r[&quot;city&quot;]].append(r[&quot;mid&quot;])
+    # 样本量门槛 + 取岗位数前 15
+    stat = [(c, len(v), median(v)) for c, v in by.items() if len(v) &gt;= MIN_CITY_N]
+    stat.sort(key=lambda t: -t[1])
+    stat = stat[:15]
+    if not stat:
+        print(&quot;[跳过] 图1：没有满足样本量门槛的城市。&quot;)
+        return None
+
+    cities = [s[0] for s in stat]
+    counts = [s[1] for s in stat]
+    meds = [s[2] / 1000 for s in stat]          # 转成 K，轴标签更短
+
+    fig, ax1 = plt.subplots(figsize=(12, 5.6))
+    ax1.bar(cities, counts, color=C_MAIN, alpha=.85, label=&quot;岗位数量&quot;)
+    ax1.set_ylabel(&quot;岗位数量（条）&quot;, color=C_MAIN, fontsize=12)
+    ax1.set_xlabel(&quot;城市&quot;)
+    ax1.tick_params(axis=&quot;y&quot;, labelcolor=C_MAIN)
+    ax1.tick_params(axis=&quot;x&quot;, rotation=30)
+    for lbl in ax1.get_xticklabels():
+        lbl.set_ha(&quot;right&quot;)
+
+    ax2 = ax1.twinx()                            # 共享 X 轴，新增右侧 Y 轴
+    ax2.plot(cities, meds, color=C_ACCENT, marker=&quot;o&quot;,
+             linewidth=2.4, markersize=6, label=&quot;月薪中位数&quot;)
+    ax2.set_ylabel(&quot;月薪中位数（K/月）&quot;, color=C_ACCENT, fontsize=12)
+    ax2.tick_params(axis=&quot;y&quot;, labelcolor=C_ACCENT)
+    # 每个点标数值，避免读者去猜刻度
+    for i, v in enumerate(meds):
+        ax2.annotate(f&quot;{v:.1f}&quot;, (i, v), textcoords=&quot;offset points&quot;,
+                     xytext=(0, 8), ha=&quot;center&quot;, fontsize=9, color=C_ACCENT)
+
+    ax1.set_title(&quot;图1 ｜ 各城市岗位需求量与薪资中位数（样本≥%d 条）&quot; % MIN_CITY_N,
+                  fontsize=14, fontweight=&quot;bold&quot;)
+    ax1.grid(axis=&quot;y&quot;, alpha=.25)
+    fig.tight_layout()
+    path = os.path.join(outdir, &quot;city_salary.png&quot;)
+    fig.savefig(path)
+    plt.close(fig)
+    print(f&quot;[保存] {path}&quot;)
+    return path
+
+
+# ==============================================================================
+# 五、图2：学历 × 经验 薪资矩阵（分组柱状）
+# ==============================================================================
+def chart_edu_exp(plt, recs, outdir):
+    &quot;&quot;&quot;
+    为什么用分组柱状而不是折线：
+      经验是【有序分类】不是连续数值（&quot;3-4年&quot;不是 3.5），折线会暗示线性关系，
+      而真实的薪资跃迁是台阶式的（0年→1年翻倍，1年→3年只涨一点）。柱状更诚实。
+    &quot;&quot;&quot;
+    cell = defaultdict(list)
+    for r in recs:
+        if r[&quot;edu&quot;] in EDU_ORDER and r[&quot;exp&quot;] in EXP_ORDER:
+            cell[(r[&quot;exp&quot;], r[&quot;edu&quot;])].append(r[&quot;mid&quot;])
+
+    # 只保留样本量足够的单元格
+    data = {}
+    for e in EXP_ORDER:
+        for d in EDU_ORDER:
+            v = cell.get((e, d), [])
+            if len(v) &gt;= MIN_CELL_N:
+                data[(e, d)] = (median(v), len(v))
+
+    exps = [e for e in EXP_ORDER if any((e, d) in data for d in EDU_ORDER)]
+    if not exps:
+        print(&quot;[跳过] 图2：没有满足样本量门槛的学历×经验组合。&quot;)
+        return None
+
+    fig, ax = plt.subplots(figsize=(12, 5.8))
+    x = range(len(exps))
+    width = 0.26                                  # 每组 3 根柱，总宽 0.78
+    colors = {&quot;大专&quot;: C_ACCENT, &quot;本科&quot;: C_MAIN, &quot;硕士&quot;: C_PURPLE}
+
+    for i, d in enumerate(EDU_ORDER):
+        vals, ns = [], []
+        for e in exps:
+            if (e, d) in data:
+                m, n = data[(e, d)]
+                vals.append(m / 1000)
+                ns.append(n)
+            else:
+                vals.append(0)                    # 样本不足 -&gt; 不画（高度 0）
+                ns.append(0)
+        offset = [xi + (i - 1) * width for xi in x]
+        bars = ax.bar(offset, vals, width=width, label=d, color=colors[d], alpha=.9)
+        # 柱顶标注样本量，让&quot;这个数可不可信&quot;一目了然
+        for b, n, v in zip(bars, ns, vals):
+            if n:
+                ax.text(b.get_x() + b.get_width() / 2, v + .4,
+                        f&quot;n={n}&quot;, ha=&quot;center&quot;, fontsize=8, color=&quot;#52606d&quot;)
+
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(exps)
+    ax.set_ylabel(&quot;月薪中位数（K/月）&quot;)
+    ax.set_xlabel(&quot;工作经验要求&quot;)
+    ax.set_title(&quot;图2 ｜ 学历 × 经验 的薪资矩阵（柱顶 n=样本量，样本&lt;%d 不展示）&quot; % MIN_CELL_N,
+                 fontsize=14, fontweight=&quot;bold&quot;)
+    ax.legend(title=&quot;学历要求&quot;)
+    ax.grid(axis=&quot;y&quot;, alpha=.25)
+    fig.tight_layout()
+    path = os.path.join(outdir, &quot;edu_exp_salary.png&quot;)
+    fig.savefig(path)
+    plt.close(fig)
+    print(f&quot;[保存] {path}&quot;)
+    return path
+
+
+# ==============================================================================
+# 六、图3：高频技能 Top15（横向条形 + 薪资标注）
+# ==============================================================================
+def chart_skill_freq(plt, recs, outdir, global_median):
+    &quot;&quot;&quot;
+    为什么用横向条形：技能名是中文且长短不一，竖向条形会让 X 轴标签挤成一团，
+    横向条形从长到短排列，既是排名也是频次对比，读起来最省力。
+
+    颜色语义：深蓝 = 该技能岗位薪资高于全局中位（学了有溢价）；
+              浅灰 = 低于全局中位（属于基础盘，不写进简历就吃亏，写了也不加分）。
+    &quot;&quot;&quot;
+    cnt = Counter()
+    sal = defaultdict(list)
+    for r in recs:
+        d = r[&quot;desc&quot;]
+        for name, kws in SKILL_DICT.items():
+            if any(k in d for k in kws):
+                cnt[name] += 1
+                sal[name].append(r[&quot;mid&quot;])
+
+    items = [(k, v) for k, v in cnt.items() if v &gt;= MIN_SKILL_N]
+    items.sort(key=lambda t: t[1])                # 升序，画出来最长的在顶部
+    if not items:
+        print(&quot;[跳过] 图3：没有满足门槛的技能。&quot;)
+        return None
+    items = items[-15:]
+
+    names = [k for k, _ in items]
+    freqs = [v / len(recs) * 100 for _, v in items]     # 转成提及率 %，比绝对次数更直观
+    meds = [median(sal[k]) for k, _ in items]
+
+    fig, ax = plt.subplots(figsize=(11, 7))
+    colors = [C_MAIN if m &gt;= global_median else C_GRAY for m in meds]
+    bars = ax.barh(names, freqs, color=colors, alpha=.9)
+
+    # 条尾标注薪资，把&quot;需求度&quot;和&quot;含金量&quot;两个信息压进一张图
+    for b, m, n in zip(bars, meds, [v for _, v in items]):
+        ax.text(b.get_width() + .5, b.get_y() + b.get_height() / 2,
+                f&quot;{m/1000:.1f}K  (n={n})&quot;, va=&quot;center&quot;, fontsize=9, color=&quot;#52606d&quot;)
+
+    ax.set_xlabel(&quot;职位描述中提及率（%）&quot;)
+    ax.set_xlim(0, max(freqs) * 1.25)             # 右侧留白给标注文字
+    ax.set_title(&quot;图3 ｜ 高频技能 Top15：提及率与对应薪资中位数\n&quot;
+                 &quot;（深蓝=薪资高于全局中位 %.1fK，灰=低于）&quot; % (global_median / 1000),
+                 fontsize=13, fontweight=&quot;bold&quot;)
+    ax.grid(axis=&quot;x&quot;, alpha=.25)
+    fig.tight_layout()
+    path = os.path.join(outdir, &quot;skill_freq.png&quot;)
+    fig.savefig(path)
+    plt.close(fig)
+    print(f&quot;[保存] {path}&quot;)
+    return path
+
+
+# ==============================================================================
+# 七、图4：薪资分布直方图 + 定位线
+# ==============================================================================
+def chart_salary_dist(plt, recs, outdir):
+    &quot;&quot;&quot;
+    为什么最后要画分布：前面三张图都在讲&quot;分组均值/中位&quot;，
+    但应届生最想知道的是&quot;我该要多少&quot;——这需要看到自己在整体分布里的位置。
+
+    三条定位线分别是：全局中位数、大专学历中位数、无经验中位数。
+    把&quot;市场整体&quot;和&quot;我当前的起点&quot;放在同一个坐标里，期望薪资才定得有理有据。
+    &quot;&quot;&quot;
+    vals = sorted(r[&quot;mid&quot;] for r in recs)
+    if not vals:
+        print(&quot;[跳过] 图4：无有效薪资。&quot;)
+        return None
+    n = len(vals)
+    g_med = median(vals)
+    d_med = median([r[&quot;mid&quot;] for r in recs if r[&quot;edu&quot;] == &quot;大专&quot;]) or g_med
+    e_med = median([r[&quot;mid&quot;] for r in recs if r[&quot;exp&quot;] in (&quot;无需经验&quot;, &quot;在校生/应届生&quot;)]) or g_med
+    p25, p75 = vals[int(n * .25)], vals[int(n * .75)]
+
+    fig, ax = plt.subplots(figsize=(11, 5.6))
+    ax.hist([v / 1000 for v in vals], bins=32, color=C_TEAL, alpha=.75, edgecolor=&quot;white&quot;)
+    for v, c, lb in [(g_med, C_ACCENT, f&quot;全局中位 {g_med/1000:.1f}K&quot;),
+                     (d_med, C_PURPLE, f&quot;大专中位 {d_med/1000:.1f}K&quot;),
+                     (e_med, &quot;#c0392b&quot;, f&quot;无经验中位 {e_med/1000:.1f}K&quot;)]:
+        ax.axvline(v / 1000, color=c, linestyle=&quot;--&quot;, linewidth=2, label=lb)
+
+    # P25~P75 区间阴影：这是&quot;大多数岗位落在哪&quot;的直观范围
+    ax.axvspan(p25 / 1000, p75 / 1000, color=C_ACCENT, alpha=.10)
+    ax.text((p25 + p75) / 2000, ax.get_ylim()[1] * .92,
+            f&quot;P25–P75：{p25/1000:.1f}K – {p75/1000:.1f}K&quot;,
+            ha=&quot;center&quot;, fontsize=10, color=C_ACCENT)
+
+    ax.set_xlabel(&quot;月薪中位数（K/月）&quot;)
+    ax.set_ylabel(&quot;岗位数量&quot;)
+    ax.set_title(f&quot;图4 ｜ 大数据岗位薪资分布（n={n}，右偏：均值高于中位数，谈薪用中位数）&quot;,
+                 fontsize=14, fontweight=&quot;bold&quot;)
+    ax.legend()
+    ax.grid(axis=&quot;y&quot;, alpha=.25)
+    fig.tight_layout()
+    path = os.path.join(outdir, &quot;salary_dist.png&quot;)
+    fig.savefig(path)
+    plt.close(fig)
+    print(f&quot;[保存] {path}&quot;)
+    return path</code></pre>
+  </section>
+
+  
+  <section class="chart">
+    <h2>四、面向应届生的 4 条业务结论</h2>
+
+    <div class="concl">
+      <h3>结论 1 ｜ 经验的边际收益远大于学历 —— 先入行，比先升本科划算</h3>
+      <ul>
+        <li>同一批数据里：<strong>「无需经验」中位 7.5K → 「1 年经验」17.5K</strong>，
+            增幅 133%；而<strong>大专 14.5K → 本科 18.8K</strong>，增幅仅 29%。</li>
+        <li>更能说明问题的一组交叉：<strong>本科+无需经验 7.5K</strong>，
+            反而<strong>低于大专+1 年经验 11.5K</strong>。学历并不能替代经验定价。</li>
+        <li><b>落地动作：</b>接受 7.5K–11.5K 的起薪先拿到「1 年经验」这个标签；
+            参照大专+3-4 年 17.5K，把 18–24 个月后的目标定在 17.5K 左右。
+            不要为了够本科门槛而延后入行——这一年工作经验在定价上比一纸文凭更值钱。</li>
+      </ul>
+      <div class="note"><b>口径提醒：</b>这是分组中位数对比，不是因果推断。薪资差异同时受城市、
+      行业、公司类型影响，结论用于<strong>定方向</strong>，不足以支撑「只要熬满一年就必然翻倍」。</div>
+    </div>
+
+    <div class="concl">
+      <h3>结论 2 ｜ 岗位数量 ≠ 薪资水平 —— 大专生应选「高薪 + 有量」的城市，而非岗位最多的城市</h3>
+      <ul>
+        <li>错配最明显的两处：<strong>南京 348 条但中位仅 14.0K</strong>；
+            <strong>深圳 257 条却达 20.0K</strong>；
+            上海以 766 条居首，中位 24.0K。</li>
+        <li>落到大专这个池子，岗位数 TOP 是<strong>南京 138、深圳 101、合肥 68</strong> ——
+            南京大专岗位最多，但整体薪资水平偏低。</li>
+        <li><b>落地动作：</b>优先级定为<strong>深圳 &gt; 上海 &gt; 成都</strong>（岗位量与薪资兼顾），
+            南京作为「先上岸」的备选池。成都 230 条 / 15.0K 属于竞争与回报较均衡的选项。</li>
+      </ul>
+    </div>
+
+    <div class="concl">
+      <h3>结论 3 ｜ 技能决定「能不能进门」，不决定「能拿多少」—— 简历要分层写</h3>
+      <ul>
+        <li>需求侧：<strong>SQL 40.5%、Java 40.0%、MySQL 27.2%、Python 22.5%</strong>，
+            大数据生态里 Hadoop 20.0%、Spark 18.3%、Hive 14.9%。</li>
+        <li>但薪资侧几乎拉不开差距：各技能岗位中位数集中在 <strong>17.5K–18.8K</strong>，
+            极差仅约 1.25K（±7%）。<strong>技能是准入门槛，不是溢价来源。</strong></li>
+        <li><b>落地动作：</b>简历技能栏分两层写——
+            <strong>基础层</strong>（必写，覆盖 60%+ 的 JD 关键词）：SQL、Java、Hadoop、Spark、Hive；
+            <strong>差异层</strong>（选写，用于定向岗位）：Flink 8.3%、ClickHouse 11.4%、数据仓库 11.0%，
+            对应实时数仓方向。面试时把「我会什么」转向「我用它做过什么」——因为大家都会写这些词。</li>
+      </ul>
+    </div>
+
+    <div class="concl">
+      <h3>结论 4 ｜ 期望薪资锚定 P25 而非中位数，投递优先级按企业类型排</h3>
+      <ul>
+        <li>分布：<strong>P25 13.3K ｜ P50 18.0K ｜ P75 24.0K ｜ P90 31.2K</strong>。
+            全场中位数 18.0K 主要由 3-4 年经验岗位支撑，<strong>不是应届生的锚点</strong>。</li>
+        <li>定位自己：大专中位 14.5K，无经验中位 7.5K。合理报价区间是
+            <strong>7.5K–13.3K</strong>，冲刺 14.5K；报 18K 会被判定为预期脱离市场。</li>
+        <li>企业类型薪资梯度：<strong>合资 27.5K > 外资（欧美） 25.0K > 外资（非欧美） 25.0K > 事业单位 20.5K > 国企 18.8K > 已上市 18.0K > 民营 15.0K</strong>（样本 &lt; 60 的类别已剔除）。
+            其中民营占 36%（1218 条）却薪资最低。</li>
+        <li><b>落地动作：</b>把投递分成两池——<strong>冲刺池</strong>（外资／合资／国企，量少但溢价明显）、
+            <strong>保底池</strong>（民营，量大用于拿 offer 练手）。同等条件下优先 500–1000 人规模企业（中位 22.5K 最高）。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>五、复现方式</h2>
+    <pre><code>pip install pandas matplotlib openpyxl
+python job_visualization.py                       # 默认读 D:\Downloads\清洗后job.xlsx
+python job_visualization.py --limit 500           # 小样本先跑通
+python job_visualization.py --outdir my_charts    # 指定输出目录</code></pre>
+    <p>产出：<code>charts/city_salary.png</code>、<code>charts/edu_exp_salary.png</code>、
+    <code>charts/skill_freq.png</code>、<code>charts/salary_dist.png</code>，
+    另附 <code>charts/viz_summary.csv</code>（各维度汇总表，写简历时可直接查数）。</p>
+    <div class="note"><b>说明：</b>本页图表由 <code>build_viz_page.py</code> 直接读取同一份 xlsx
+    实时计算并绘制为内嵌 SVG，与脚本产出完全一致；PNG 版本需本地安装 matplotlib 后生成。</div>
+  </section>
+
+  <footer>
+    大数据招聘岗位数据分析 · 可视化方案　|　求职作品集项目　|　数据源：前程无忧大数据岗位公开数据集（3357 条）
+  </footer>
+</div>
+</body>
+</html>

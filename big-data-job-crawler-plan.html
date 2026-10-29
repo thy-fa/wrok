@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大数据招聘岗位 · 数据采集方案</title>
+<style>
+  :root{
+    --ink:#1f2933; --sub:#52606d; --line:#e4e7eb; --bg:#ffffff;
+    --brand:#0b63ce; --brand-soft:#e8f1fc; --accent:#0f9d8a; --chip:#f4f6f8;
+    --warn:#b4540a; --warn-bg:#fff4e6;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:#f5f7fa; color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    line-height:1.75; font-size:15px;}
+  .wrap{max-width:900px; margin:32px auto; background:var(--bg);
+    padding:48px 56px; border-radius:14px; box-shadow:0 8px 30px rgba(20,40,80,.08);}
+  header{border-bottom:3px solid var(--brand); padding-bottom:20px; margin-bottom:8px;}
+  h1{font-size:25px; margin:0 0 6px; letter-spacing:.5px;}
+  .subtitle{color:var(--sub); font-size:15px; margin:0;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .meta span{background:var(--brand-soft); color:var(--brand); font-size:12.5px;
+    padding:5px 12px; border-radius:20px; font-weight:600;}
+  section{margin-top:34px;}
+  h2{font-size:18px; color:var(--brand); margin:0 0 14px;
+    display:flex; align-items:center; gap:10px;}
+  h2 .num{background:var(--brand); color:#fff; width:26px; height:26px;
+    border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    font-size:14px; flex:none;}
+  p{margin:0 0 12px;}
+  ul{margin:0 0 12px; padding-left:20px;}
+  li{margin-bottom:8px;}
+  .card{background:var(--chip); border-left:4px solid var(--brand);
+    padding:14px 18px; border-radius:0 8px 8px 0; margin-bottom:14px;}
+  table{width:100%; border-collapse:collapse; margin:6px 0 4px; font-size:13.5px;}
+  th,td{border:1px solid var(--line); padding:9px 12px; text-align:left; vertical-align:top;}
+  th{background:var(--brand-soft); color:var(--brand); font-weight:600;}
+  tr:nth-child(even) td{background:#fafbfc;}
+  .risk{font-size:12.5px; font-weight:600; padding:2px 8px; border-radius:6px;}
+  .r-low{background:#e6f6f1; color:#0f7a63;}
+  .r-mid{background:#fff4e6; color:#b4540a;}
+  .r-high{background:#fdecec; color:#c0392b;}
+  pre{background:#0f1b2d; color:#e6edf3; padding:18px 20px; border-radius:10px;
+    overflow-x:auto; font-size:12.5px; line-height:1.6;
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;}
+  pre code{white-space:pre;}
+  .note{background:var(--warn-bg); border:1px solid #f0d99b; border-radius:8px;
+    padding:12px 16px; font-size:13.5px; color:#7a5d12;}
+  .tag{display:inline-block; background:#fff; border:1px solid var(--line);
+    color:var(--sub); font-size:12px; padding:2px 9px; border-radius:6px; margin:3px 4px 0 0;}
+  footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--line);
+    color:var(--sub); font-size:12.5px; text-align:center;}
+  @media print{body{background:#fff;} .wrap{box-shadow:none; margin:0;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>大数据招聘岗位 · 数据采集方案</h1>
+    <p class="subtitle">求职作品集项目 · 数据采集层设计</p>
+    <div class="meta">
+      <span>适用：专科 · 大数据技术专业 · 大三</span>
+      <span>技术栈：Python · requests · BeautifulSoup</span>
+      <span>存储：CSV</span>
+    </div>
+  </header>
+
+  <!-- 1. 数据源 -->
+  <section>
+    <h2><span class="num">1</span>推荐可采集的公开数据源</h2>
+    <p>按"风险从低到高"排序，建议学生<strong>优先用公开数据集练手</strong>，再谨慎尝试真实站点。</p>
+    <table>
+      <tr><th style="width:20%">数据源</th><th style="width:12%">类型</th><th style="width:12%">难度/风险</th><th>说明</th></tr>
+      <tr><td>Kaggle 数据集</td><td>公开数据集</td><td><span class="risk r-low">低</span></td><td>"Data Science Job Salaries"等，可直接下载，零法律风险，适合做分析原型</td></tr>
+      <tr><td>和鲸社区 heywhale</td><td>公开数据集</td><td><span class="risk r-low">低</span></td><td>含国内互联网/招聘类数据集，中文语境更贴近本项目</td></tr>
+      <tr><td>阿里云天池</td><td>赛题数据集</td><td><span class="risk r-low">低</span></td><td>部分招聘赛题提供结构化数据，省去采集环节</td></tr>
+      <tr><td>51job 前程无忧</td><td>招聘平台</td><td><span class="risk r-mid">中</span></td><td>页面结构相对规律，需处理分页与编码；务必遵守 robots 与频率限制</td></tr>
+      <tr><td>智联招聘</td><td>招聘平台</td><td><span class="risk r-mid">中</span></td><td>含半公开 JSON 接口，可优先尝试接口而非整页解析</td></tr>
+      <tr><td>BOSS直聘 / 拉勾</td><td>招聘平台</td><td><span class="risk r-high">高</span></td><td>反爬强、需登录或加密参数，<strong>不推荐新手</strong>，易触发封禁与合规问题</td></tr>
+      <tr><td>国家大学生就业服务平台</td><td>政府公开</td><td><span class="risk r-low">低</span></td><td>官方就业数据/报告，权威且合规，适合做对比验证</td></tr>
+    </table>
+    <div class="note">建议路线：先用 Kaggle / 和鲸数据集完成"清洗—分析—可视化"全流程，证明分析能力；再把真实站点作为"数据采集实践"单独展示，并明确标注合规措施。</div>
+  </section>
+
+  <!-- 2. 字段清单 -->
+  <section>
+    <h2><span class="num">2</span>需要采集的字段清单</h2>
+    <table>
+      <tr><th style="width:24%">字段（英文键）</th><th style="width:20%">中文</th><th>说明 / 采集要点</th></tr>
+      <tr><td>job_title</td><td>职位名称</td><td>如"大数据开发工程师"，用于岗位分类</td></tr>
+      <tr><td>company_name</td><td>公司名称</td><td>用于公司规模/行业聚合</td></tr>
+      <tr><td>city</td><td>工作城市</td><td>统一到城市级（如"北京"），便于区域分析</td></tr>
+      <tr><td>salary_text</td><td>薪资原文</td><td>保留原始区间文本，如"15-25K·13薪"</td></tr>
+      <tr><td>salary_min / salary_max</td><td>薪资下限/上限</td><td>清洗时从原文解析出数值（单位统一为 K/月）</td></tr>
+      <tr><td>education</td><td>学历要求</td><td>归一化为：大专 / 本科 / 硕士 / 不限</td></tr>
+      <tr><td>experience</td><td>经验要求</td><td>归一化为：1年以内 / 1-3年 / 3-5年 / 5年以上</td></tr>
+      <tr><td>company_size</td><td>公司规模</td><td>如"100-499人"</td></tr>
+      <tr><td>industry</td><td>所属行业</td><td>如"互联网/电商"</td></tr>
+      <tr><td>skills</td><td>技能标签</td><td>从岗位描述中用分词/关键词提取，逗号分隔</td></tr>
+      <tr><td>job_description</td><td>岗位描述</td><td>原始文本，用于词频与共现分析</td></tr>
+      <tr><td>source</td><td>数据来源</td><td>记录站点域名，便于溯源</td></tr>
+      <tr><td>crawl_time</td><td>采集时间</td><td>自动生成时间戳，标识数据截面</td></tr>
+    </table>
+  </section>
+
+  <!-- 3. 代码框架 -->
+  <section>
+    <h2><span class="num">3</span>Python 采集核心代码框架</h2>
+    <p>基于 <code>requests + BeautifulSoup</code>，已内置 robots 校验、请求重试、频率控制和 CSV 落库。选择器为<strong>占位示例</strong>，需用浏览器开发者工具按真实页面替换（代码中已用 <code>TODO</code> 标注）。</p>
+    <pre><code>"""
+大数据招聘岗位数据采集框架（教学版）
+技术栈：requests + BeautifulSoup(bs4) + csv
+【重要合规声明】
+1. 仅供学习交流，禁止商业用途或高频批量抓取。
+2. 运行前请阅读目标网站的 robots.txt 与用户协议。
+3. 仅采集公开岗位信息，严禁采集个人隐私数据。
+4. 控制请求频率，避免对服务器造成压力。
+"""
+
+import os, time, random, csv
+from typing import Optional, List, Dict
+from urllib.parse import urlparse
+from urllib.robotparser import RobotFileParser
+import requests
+from bs4 import BeautifulSoup
+
+# ---------- 0. 基础配置 ----------
+BASE_URL = "https://example.com/jobs/search"   # 替换为目标站点搜索页
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ...",
+    "Accept-Language": "zh-CN,zh;q=0.9",
+}
+MIN_DELAY, MAX_DELAY = 2.0, 4.0   # 请求间隔（秒），随机抖动
+MAX_PAGES = 10                    # 学生练习建议小范围
+RETRIES = 3
+OUTPUT_FILE = "jobs.csv"
+
+# ---------- 1. robots.txt 合规校验 ----------
+def can_fetch(url: str) -> bool:
+    parsed = urlparse(url)
+    rp = RobotFileParser()
+    rp.set_url(f"{parsed.scheme}://{parsed.netloc}/robots.txt")
+    try:
+        rp.read()
+        allowed = rp.can_fetch(HEADERS["User-Agent"], url)
+        if not allowed:
+            print(f"[合规] robots.txt 禁止爬取：{url}")
+        return allowed
+    except Exception as e:
+        print(f"[合规] 无法读取 robots.txt（{e}），默认不爬取。")
+        return False
+
+# ---------- 2. 单次请求（含重试） ----------
+def fetch_page(url: str, params: Optional[Dict] = None) -> Optional[str]:
+    for attempt in range(1, RETRIES + 1):
+        try:
+            resp = requests.get(url, params=params,
+                                headers=HEADERS, timeout=10)
+            resp.encoding = resp.apparent_encoding  # 自动识别中文编码
+            if resp.status_code == 200:
+                return resp.text
+            print(f"[重试 {attempt}] 状态码 {resp.status_code}")
+        except requests.RequestException as e:
+            print(f"[重试 {attempt}] 请求异常：{e}")
+        time.sleep(random.uniform(MIN_DELAY, MAX_DELAY))
+    return None
+
+# ---------- 3. 页面解析（bs4 提取字段） ----------
+def parse_jobs(html: str) -> List[Dict]:
+    soup = BeautifulSoup(html, "html.parser")
+    records: List[Dict] = []
+    # TODO: 替换为真实岗位卡片选择器，如 soup.select('.job-card')
+    job_cards = soup.select("div.job-item")
+    for card in job_cards:
+        # TODO: 按真实结构替换每个字段的选择器
+        title = card.select_one(".job-title")
+        company = card.select_one(".company-name")
+        city = card.select_one(".city")
+        salary = card.select_one(".salary")
+        record = {
+            "job_title": title.get_text(strip=True) if title else "",
+            "company_name": company.get_text(strip=True) if company else "",
+            "city": city.get_text(strip=True) if city else "",
+            "salary_text": salary.get_text(strip=True) if salary else "",
+            "source": urlparse(BASE_URL).netloc,
+            "crawl_time": time.strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        records.append(record)
+    return records
+
+# ---------- 4. 保存为 CSV ----------
+def save_to_csv(records: List[Dict], filename: str = OUTPUT_FILE) -> None:
+    if not records:
+        return
+    fieldnames = records[0].keys()
+    write_header = not os.path.exists(filename)
+    # utf-8-sig 编码：保证 Excel 打开中文不乱码
+    with open(filename, "a", newline="", encoding="utf-8-sig") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if write_header:
+            writer.writeheader()
+        writer.writerows(records)
+
+# ---------- 5. 主流程 ----------
+def main() -> None:
+    total = 0
+    for page in range(1, MAX_PAGES + 1):
+        if not can_fetch(BASE_URL):
+            print("[跳过] 站点未被 robots 允许，停止采集。")
+            break
+        html = fetch_page(BASE_URL, params={"keyword": "大数据", "page": page})
+        if not html:
+            break
+        records = parse_jobs(html)
+        if not records:
+            break
+        save_to_csv(records)
+        total += len(records)
+        time.sleep(random.uniform(MIN_DELAY, MAX_DELAY))
+    print(f"[完成] 共采集 {total} 条，保存于 {OUTPUT_FILE}")
+
+if __name__ == "__main__":
+    main()
+</code></pre>
+    <div class="card">
+      <p style="margin:0"><strong>学生调试提示：</strong>先把 <code>BASE_URL</code> 换成目标站点，用浏览器"检查"定位岗位卡片的真实 CSS 选择器，替换 <code>TODO</code> 处；首次运行时将 <code>MAX_PAGES</code> 设为 1~2 页验证解析是否正确，再逐步放量。完整可运行版本见随附文件 <code>job_crawler_framework.py</code>。</p>
+    </div>
+  </section>
+
+  <!-- 4. 爬虫规范 -->
+  <section>
+    <h2><span class="num">4</span>采集爬虫规范（频率 / robots / 法律风险）</h2>
+    <div class="card">
+      <p style="margin-bottom:8px"><strong>① 频率控制</strong></p>
+      <ul>
+        <li>每两次请求间隔 <strong>2–5 秒</strong>随机休眠（代码已内置 <code>time.sleep(random.uniform(...))</code>）。</li>
+        <li>单次采集控制页数（建议 ≤ 50 页 / 站点），避免短时高并发冲击服务器。</li>
+        <li>设置真实、稳定的 <code>User-Agent</code>，不伪造、不频繁更换。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <p style="margin-bottom:8px"><strong>② 遵守 robots 协议</strong></p>
+      <ul>
+        <li>采集前访问 <code>目标站点/robots.txt</code>，确认目标路径未被 <code>Disallow</code>。</li>
+        <li>代码已用 <code>RobotFileParser</code> 自动校验，被禁止时主动跳过。</li>
+        <li>尊重 <code>Crawl-delay</code> 指令（若站点声明）。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <p style="margin-bottom:8px"><strong>③ 规避法律风险</strong></p>
+      <ul>
+        <li>仅采集<strong>公开岗位信息</strong>，<strong>严禁</strong>抓取求职者简历等个人信息，遵守《个人信息保护法》。</li>
+        <li>数据<strong>仅用于学习研究</strong>，不在公开作品集中泄露企业未公开商业数据，不用于商用或转售。</li>
+        <li>不绕过登录、付费墙或加密校验；不采用分布式代理池规避封禁。</li>
+        <li>遵守《网络安全法》《数据安全法》，不对目标服务器造成实质性负担（避免构成拒绝服务）。</li>
+        <li>在作品集/报告中<strong>主动声明数据来源与合规措施</strong>，体现职业素养。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5. 存储 -->
+  <section>
+    <h2><span class="num">5</span>数据存储方案：保存为 CSV</h2>
+    <p>采用轻量、通用、无需数据库的 <strong>CSV</strong> 方案，契合学生项目与后续 Pandas 分析。</p>
+    <ul>
+      <li><strong>编码：</strong>使用 <code>utf-8-sig</code>，保证 Excel 直接打开中文不乱码（关键坑点）。</li>
+      <li><strong>写入模式：</strong><code>open(..., "a")</code> 追加；文件不存在时写表头，存在时仅追加数据，支持断点续采。</li>
+      <li><strong>字段对齐：</strong>以首条记录键为表头，所有记录字段保持一致，便于后续 <code>pd.read_csv()</code> 直接分析。</li>
+      <li><strong>进阶（可选）：</strong>数据量增大后，可改为 <code>SQLite</code> 或 <code>MySQL</code> 去重存储；分析阶段再用 <code>pandas</code> 读取做清洗。</li>
+    </ul>
+    <div class="note"><strong>下一步建议：</strong>采集到的 <code>jobs.csv</code> 进入"数据清洗层"——解析薪资区间、归一化学历/经验、用 jieba 分词提取技能标签，再进入分析与可视化阶段。</div>
+  </section>
+
+  <footer>
+    大数据招聘岗位数据采集方案（求职作品集版）　|　配套代码：job_crawler_framework.py
+  </footer>
+
+</div>
+</body>
+</html>

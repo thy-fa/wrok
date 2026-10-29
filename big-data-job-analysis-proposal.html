@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大数据岗位招聘信息数据分析 · 项目方案</title>
+<style>
+  :root{
+    --ink:#1f2933; --sub:#52606d; --line:#e4e7eb; --bg:#ffffff;
+    --brand:#0b63ce; --brand-soft:#e8f1fc; --accent:#0f9d8a;
+    --chip:#f4f6f8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:#f5f7fa; color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    line-height:1.75; font-size:15px;
+  }
+  .wrap{max-width:880px; margin:32px auto; background:var(--bg);
+    padding:48px 56px; border-radius:14px; box-shadow:0 8px 30px rgba(20,40,80,.08);}
+  header{border-bottom:3px solid var(--brand); padding-bottom:20px; margin-bottom:8px;}
+  h1{font-size:26px; margin:0 0 6px; letter-spacing:.5px;}
+  .subtitle{color:var(--sub); font-size:15px; margin:0;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .meta span{background:var(--brand-soft); color:var(--brand); font-size:12.5px;
+    padding:5px 12px; border-radius:20px; font-weight:600;}
+  section{margin-top:34px;}
+  h2{font-size:18px; color:var(--brand); margin:0 0 14px;
+    display:flex; align-items:center; gap:10px;}
+  h2 .num{background:var(--brand); color:#fff; width:26px; height:26px;
+    border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    font-size:14px; flex:none;}
+  p{margin:0 0 12px;}
+  ul{margin:0 0 12px; padding-left:20px;}
+  li{margin-bottom:8px;}
+  .card{background:var(--chip); border-left:4px solid var(--brand);
+    padding:14px 18px; border-radius:0 8px 8px 0; margin-bottom:14px;}
+  /* architecture flow */
+  .flow{display:flex; flex-direction:column; gap:0; margin-top:6px;}
+  .step{display:flex; gap:16px; align-items:stretch;}
+  .step .bar{width:6px; background:linear-gradient(var(--brand),var(--accent));
+    border-radius:4px; flex:none;}
+  .step .body{flex:1; padding:12px 0;}
+  .step h3{margin:0 0 4px; font-size:15.5px;}
+  .step .desc{color:var(--sub); font-size:13.5px; margin:0;}
+  .step .tags{margin-top:6px;}
+  .tag{display:inline-block; background:#fff; border:1px solid var(--line);
+    color:var(--sub); font-size:12px; padding:2px 9px; border-radius:6px; margin:3px 4px 0 0;}
+  /* tables */
+  table{width:100%; border-collapse:collapse; margin:6px 0 4px; font-size:13.5px;}
+  th,td{border:1px solid var(--line); padding:9px 12px; text-align:left; vertical-align:top;}
+  th{background:var(--brand-soft); color:var(--brand); font-weight:600;}
+  tr:nth-child(even) td{background:#fafbfc;}
+  .q{font-weight:600; color:var(--ink);}
+  .note{background:#fff8e6; border:1px solid #f0d99b; border-radius:8px;
+    padding:12px 16px; font-size:13.5px; color:#7a5d12;}
+  footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--line);
+    color:var(--sub); font-size:12.5px; text-align:center;}
+  @media print{body{background:#fff;} .wrap{box-shadow:none; margin:0;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>大数据岗位招聘信息数据分析</h1>
+    <p class="subtitle">求职作品集项目方案 · 数据分析方向</p>
+    <div class="meta">
+      <span>适用对象：专科 · 大数据技术专业 · 大三</span>
+      <span>项目类型：数据采集 + 清洗 + 分析 + 可视化</span>
+      <span>用途：简历项目 / 个人作品集</span>
+    </div>
+  </header>
+
+  <!-- 1. 背景与目标 -->
+  <section>
+    <h2><span class="num">1</span>项目背景与业务目标</h2>
+    <div class="card">
+      <p style="margin-bottom:8px"><strong>项目背景</strong></p>
+      <p>大数据产业持续扩张，但岗位需求结构、技能门槛与薪资水平在区域与行业间差异显著。作为大数据技术专业学生，仅凭零散的求职经验难以把握市场全貌。本项目通过采集主流招聘平台的公开岗位信息，运用Python进行数据清洗与统计建模，量化呈现大数据岗位的供需特征，既为个人学习与求职提供数据支撑，也以完整的数据分析闭环展示工程能力。</p>
+    </div>
+    <div class="card">
+      <p style="margin-bottom:8px"><strong>业务目标</strong></p>
+      <ul>
+        <li>摸清大数据岗位的市场规模、城市分布与人才画像（学历、经验要求）。</li>
+        <li>提炼高频技术技能与技能组合规律，明确学习重点与求职竞争力构建方向。</li>
+        <li>量化薪资影响因素，建立合理的薪资预期与岗位匹配参考。</li>
+        <li>形成可复用的"采集—清洗—分析—可视化"方法论，沉淀为个人作品集标杆项目。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 2. 流程架构 -->
+  <section>
+    <h2><span class="num">2</span>项目整体流程架构</h2>
+    <p>项目采用分层数据流水线，自上而下贯穿五个阶段，形成端到端分析闭环：</p>
+    <div class="flow">
+      <div class="step">
+        <div class="bar"></div>
+        <div class="body">
+          <h3>① 数据采集层</h3>
+          <p class="desc">从招聘平台获取岗位原始数据，处理分页、反爬与字段抽取。</p>
+          <div class="tags"><span class="tag">Python</span><span class="tag">Requests / Selenium</span><span class="tag">Scrapy</span><span class="tag">API / 网页解析</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="bar"></div>
+        <div class="body">
+          <h3>② 数据存储层</h3>
+          <p class="desc">按结构化与半结构化特点落库，保留原始明细以便回溯。</p>
+          <div class="tags"><span class="tag">MySQL</span><span class="tag">MongoDB</span><span class="tag">CSV / JSON</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="bar"></div>
+        <div class="body">
+          <h3>③ 数据清洗层</h3>
+          <p class="desc">去重、缺失值处理、薪资区间标准化、城市/学历/经验归一化、技能标签抽取。</p>
+          <div class="tags"><span class="tag">Pandas</span><span class="tag">NumPy</span><span class="tag">正则表达式</span><span class="tag">jieba 分词</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="bar"></div>
+        <div class="body">
+          <h3>④ 数据分析层</h3>
+          <p class="desc">描述性统计、分组对比、相关性分析、文本词频与技能共现分析。</p>
+          <div class="tags"><span class="tag">统计建模</span><span class="tag">相关性分析</span><span class="tag">词频 / 共现</span><span class="tag">Matplotlib</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="bar"></div>
+        <div class="body">
+          <h3>⑤ 可视化与展示层</h3>
+          <p class="desc">交互式仪表盘与结论报告，支撑决策与作品集展示。</p>
+          <div class="tags"><span class="tag">ECharts</span><span class="tag">Tableau / PowerBI</span><span class="tag">HTML 报告</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 数据源 -->
+  <section>
+    <h2><span class="num">3</span>数据源说明</h2>
+    <p>本项目以公开招聘平台的结构化岗位信息作为主要数据来源，采用合法合规的采集方式（遵守 robots 协议与平台条款，仅用于学习研究）。</p>
+    <table>
+      <tr><th style="width:22%">项目</th><th>说明</th></tr>
+      <tr><td>数据来源</td><td>BOSS直聘、智联招聘、拉勾网、猎聘网等主流招聘平台公开岗位页</td></tr>
+      <tr><td>采集范围</td><td>关键词"大数据""数据分析""数据开发""ETL""数据工程师"等，覆盖北上广深杭等10+城市</td></tr>
+      <tr><td>样本规模</td><td>目标 10,000+ 条有效岗位记录（按时间与城市分层抽样）</td></tr>
+      <tr><td>时间窗口</td><td>近 12 个月滚动数据，形成时间截面快照</td></tr>
+      <tr><td>核心字段</td><td>职位名称、公司名称、城市、薪资区间、学历要求、经验要求、技能/岗位描述、公司规模、所属行业</td></tr>
+    </table>
+  </section>
+
+  <!-- 4. 分析问题 -->
+  <section>
+    <h2><span class="num">4</span>项目预期分析问题</h2>
+    <table>
+      <tr><th style="width:6%">#</th><th style="width:30%">业务问题</th><th>分析思路与产出</th></tr>
+      <tr>
+        <td>Q1</td>
+        <td class="q">区域分布与薪资差异</td>
+        <td>按城市分组统计岗位数量与薪资中位数，绘制热力图与箱线图，定位高需求高薪城市集群。</td>
+      </tr>
+      <tr>
+        <td>Q2</td>
+        <td class="q">核心技能需求图谱</td>
+        <td>对岗位描述做分词与词频统计，构建技能词云与技能共现矩阵，识别"必备技能 + 加分技能"组合。</td>
+      </tr>
+      <tr>
+        <td>Q3</td>
+        <td class="q">学历与经验对薪资的影响</td>
+        <td>以薪资为因变量，学历/经验为自变量做分组对比与相关性分析，量化门槛效应。</td>
+      </tr>
+      <tr>
+        <td>Q4</td>
+        <td class="q">企业规模与行业的岗位差异</td>
+        <td>对比大厂、中厂、初创公司在职责描述与技能要求上的侧重，提炼细分赛道特征。</td>
+      </tr>
+      <tr>
+        <td>Q5</td>
+        <td class="q">岗位需求时间趋势</td>
+        <td>按月聚合岗位量，观察行业季节性波动与长期增长趋势，辅助求职节奏判断。</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- 5. 局限性 -->
+  <section>
+    <h2><span class="num">5</span>项目局限性说明</h2>
+    <div class="note">
+      <ul style="margin:0">
+        <li><strong>样本覆盖有限：</strong>受平台反爬与访问频率限制，样本未必覆盖全部岗位，存在选择偏差；部分垂直招聘渠道未纳入。</li>
+        <li><strong>时效性偏差：</strong>招聘信息动态更新，分析结果为特定时间截面快照，不代表长期或实时行情。</li>
+        <li><strong>薪资口径问题：</strong>原始薪资多为区间值且含"面议"，经标准化处理，可能与实际到手薪酬存在偏差。</li>
+        <li><strong>文本提取误差：</strong>岗位描述主观性强，技能标签依赖分词词典，存在漏提、误提与同义词归并不足的风险。</li>
+        <li><strong>供需视角单一：</strong>仅反映招聘端（企业）需求，不等于实际就业落地与候选人竞争强度。</li>
+        <li><strong>合规边界：</strong>数据采集须严格遵守平台协议与数据安全法规，仅限学习研究，不可商用或高频抓取。</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    大数据岗位招聘信息数据分析 · 项目方案（求职作品集版）　|　可裁剪为简历"项目经历"描述或作品集详情页
+  </footer>
+
+</div>
+</body>
+</html>

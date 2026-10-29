@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大数据招聘岗位 · 数据清洗与 EDA 方案</title>
+<style>
+  :root{
+    --ink:#1f2933; --sub:#52606d; --line:#e4e7eb; --bg:#ffffff;
+    --brand:#0b63ce; --brand-soft:#e8f1fc; --accent:#0f9d8a; --chip:#f4f6f8;
+    --warn:#b4540a; --warn-bg:#fff4e6;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:#f5f7fa; color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    line-height:1.75; font-size:15px;}
+  .wrap{max-width:920px; margin:32px auto; background:var(--bg);
+    padding:48px 56px; border-radius:14px; box-shadow:0 8px 30px rgba(20,40,80,.08);}
+  header{border-bottom:3px solid var(--brand); padding-bottom:20px; margin-bottom:8px;}
+  h1{font-size:25px; margin:0 0 6px; letter-spacing:.5px;}
+  .subtitle{color:var(--sub); font-size:15px; margin:0;}
+  .meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .meta span{background:var(--brand-soft); color:var(--brand); font-size:12.5px;
+    padding:5px 12px; border-radius:20px; font-weight:600;}
+  section{margin-top:34px;}
+  h2{font-size:18px; color:var(--brand); margin:0 0 14px;
+    display:flex; align-items:center; gap:10px;}
+  h2 .num{background:var(--brand); color:#fff; width:26px; height:26px;
+    border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    font-size:14px; flex:none;}
+  h3{font-size:15px; color:var(--ink); margin:18px 0 6px;}
+  p{margin:0 0 12px;}
+  ul{margin:0 0 12px; padding-left:20px;}
+  li{margin-bottom:8px;}
+  .card{background:var(--chip); border-left:4px solid var(--brand);
+    padding:14px 18px; border-radius:0 8px 8px 0; margin-bottom:14px;}
+  .biz{background:#eafaf4; border:1px solid #bfe9d8; border-radius:8px;
+    padding:10px 14px; font-size:13.5px; color:#0f6b4f; margin:8px 0 14px;}
+  table{width:100%; border-collapse:collapse; margin:6px 0 4px; font-size:13.5px;}
+  th,td{border:1px solid var(--line); padding:9px 12px; text-align:left; vertical-align:top;}
+  th{background:var(--brand-soft); color:var(--brand); font-weight:600;}
+  tr:nth-child(even) td{background:#fafbfc;}
+  pre{background:#0f1b2d; color:#e6edf3; padding:16px 18px; border-radius:10px;
+    overflow-x:auto; font-size:12.5px; line-height:1.6;
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;}
+  .note{background:var(--warn-bg); border:1px solid #f0d99b; border-radius:8px;
+    padding:12px 16px; font-size:13.5px; color:#7a5d12;}
+  footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--line);
+    color:var(--sub); font-size:12.5px; text-align:center;}
+  @media print{body{background:#fff;} .wrap{box-shadow:none; margin:0;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>大数据招聘岗位 · 数据清洗与 EDA 方案</h1>
+    <p class="subtitle">求职作品集项目 · 清洗层 + 探索性分析层</p>
+    <div class="meta">
+      <span>适用：专科 · 大数据技术专业 · 大三</span>
+      <span>技术栈：Python · pandas · numpy</span>
+      <span>配套：clean_eda.py（可运行）</span>
+    </div>
+  </header>
+
+  <!-- 前提 -->
+  <section>
+    <h2><span class="num">0</span>输入与前提</h2>
+    <p>原始数据 <code>jobs.csv</code> 来自采集层，建议包含字段：<code>job_title, company_name, city, salary_text, education, experience, company_size, industry, skills, job_description, source, crawl_time</code>。若列名不同，请在脚本中对应修改。编码统一用 <code>utf-8-sig</code> 读取，避免中文乱码。</p>
+  </section>
+
+  <!-- 1. 清洗步骤 -->
+  <section>
+    <h2><span class="num">1</span>数据清洗步骤（四类）</h2>
+
+    <h3>1.1 去重</h3>
+    <div class="card">
+      <ul>
+        <li><strong>整行去重</strong>：<code>drop_duplicates()</code> 清除完全重复记录。</li>
+        <li><strong>业务主键去重</strong>：按 <code>job_title+company_name+city+salary_text</code> 去重，避免同一岗位被多页/多源重复抓取。</li>
+      </ul>
+    </div>
+<pre><code># 1) 去重：整行去重 + 业务主键去重
+df = df.drop_duplicates()
+df = df.drop_duplicates(
+    subset=["job_title","company_name","city","salary_text"], keep="first")</code></pre>
+
+    <h3>1.2 缺失值处理</h3>
+    <div class="card">
+      <ul>
+        <li>先用 <code>df.isna().sum()</code> 量化各字段缺失。</li>
+        <li><strong>技能/描述</strong>补空串；<strong>学历/经验/行业/规模</strong>补"未知"占位，保留样本用于非该类分析。</li>
+        <li><strong>薪资缺失</strong>（"面议"/空）在解析后标为 NaN，薪资类分析自动剔除，不强行填充以免失真。</li>
+      </ul>
+    </div>
+<pre><code># 2) 查看缺失 + 文本类缺失补默认
+print(df.isna().sum())
+df["skills"]        = df.get("skills","").fillna("")
+df["education"]     = df["education"].fillna("未知")
+df["experience"]    = df["experience"].fillna("未知")
+df["industry"]      = df["industry"].fillna("未知")</code></pre>
+
+    <h3>1.3 字段类型转换（核心）</h3>
+    <div class="card">
+      <ul>
+        <li><strong>薪资</strong>：从 <code>salary_text</code>（如"15-25K·13薪""20-30万/年"）解析出 <code>salary_min/max</code>，统一换算为 <strong>K/月</strong>，并求 <code>salary_avg</code>。</li>
+        <li><strong>经验</strong>：解析为最低年限数值 <code>exp_min</code>（应届/不限→0）。</li>
+        <li><strong>学历</strong>：映射为有序数值 <code>edu_level</code>（大专=2、本科=3…），便于按层级比较。</li>
+        <li><strong>城市</strong>：从"城市·区"提取 <code>city_clean</code>。</li>
+        <li><strong>时间</strong>：<code>pd.to_datetime</code> 统一时间类型。</li>
+      </ul>
+    </div>
+<pre><code># 3) 薪资解析：原文 -> (min,max) 统一为 K/月
+def parse_salary(text):
+    s = str(text).replace(" ","").strip()
+    if "面议" in s or s == "":
+        return (np.nan, np.nan)
+    is_wan  = "万" in s      # 万 -> ×10 换算 K
+    is_year = "年" in s      # 年薪 -> /12 换算月
+    m = re.search(r"(\d+\.?\d*)\s*[-~到至]\s*(\d+\.?\d*)", s)
+    if m:
+        lo, hi = float(m.group(1)), float(m.group(2))
+    else:
+        m2 = re.search(r"(\d+\.?\d*)", s)
+        if not m2: return (np.nan, np.nan)
+        lo = hi = float(m2.group(1))
+    factor = 10 if is_wan else 1
+    lo, hi = lo*factor, hi*factor
+    if is_year: lo, hi = lo/12, hi/12
+    return (round(lo,1), round(hi,1))
+
+df[["salary_min","salary_max"]] = df["salary_text"].apply(
+    lambda x: pd.Series(parse_salary(x)))
+df["salary_avg"] = (df["salary_min"] + df["salary_max"]) / 2
+df["exp_min"]    = df["experience"].apply(parse_experience)
+df["edu_level"]  = df["education"].apply(parse_education)
+df["city_clean"] = df["city"].apply(clean_city)</code></pre>
+
+    <h3>1.4 异常值处理</h3>
+    <div class="card">
+      <ul>
+        <li><strong>薪资</strong>：保留 <code>0 &lt; 月薪 ≤ 200K</code>（单位 K/月），剔除"面议"未解析项与极端值；修正 <code>min&gt;max</code> 的颠倒记录。</li>
+        <li><strong>经验</strong>：剔除 <code>exp_min &lt; 0</code> 或 <code>&gt; 30</code> 的明显异常。</li>
+        <li>说明：薪资高度右偏，<strong>域值规则比 IQR 更稳</strong>；如需保守可叠加 IQR 法。</li>
+      </ul>
+    </div>
+<pre><code># 4) 异常值：0 < 月薪 <= 200K；修正 min>max；经验 0~30 年
+df = df[(df["salary_max"] > 0) & (df["salary_max"] <= 200)]
+bad = df["salary_min"] > df["salary_max"]
+df.loc[bad, ["salary_min","salary_max"]] = df.loc[bad, ["salary_max","salary_min"]].values
+df = df[(df["exp_min"] >= 0) & (df["exp_min"] <= 30)]</code></pre>
+  </section>
+
+  <!-- 2. EDA 维度 -->
+  <section>
+    <h2><span class="num">2</span>探索性分析维度（描述统计 + 分组统计）</h2>
+
+    <h3>2.1 描述统计（整体水位）</h3>
+    <table>
+      <tr><th style="width:30%">分析</th><th>做法</th><th>业务含义</th></tr>
+      <tr><td>数值字段 describe</td><td><code>df[["salary_avg","exp_min","edu_level"]].describe()</code></td><td>掌握薪资均值/中位数/离散度、经验与学历整体水位，判断是否需对数变换</td></tr>
+      <tr><td>城市需求量 Top10</td><td><code>value_counts().head(10)</code></td><td>识别高需求城市集群，指导求职地域选择</td></tr>
+      <tr><td>学历 / 经验分布</td><td><code>value_counts()</code></td><td>刻画岗位门槛画像，定位目标人群（如"本科+1-3年"为主力）</td></tr>
+    </table>
+
+    <h3>2.2 分组统计（对比与归因）</h3>
+    <table>
+      <tr><th style="width:30%">分析</th><th>做法</th><th>业务含义</th></tr>
+      <tr><td>城市 × 平均薪资</td><td><code>groupby("city_clean")["salary_avg"].agg(["count","mean","median"])</code>，过滤样本&lt;20</td><td>区域薪资差异，发现高薪高地（如一线 vs 新一线）</td></tr>
+      <tr><td>学历 × 薪资</td><td><code>groupby("edu_level")</code></td><td>量化学历溢价，验证"本科是否为薪酬拐点"</td></tr>
+      <tr><td>经验 × 薪资</td><td><code>groupby("exp_min")</code></td><td>经验溢价曲线，判断"几年经验性价比最高"</td></tr>
+      <tr><td>行业 × 薪资/需求</td><td><code>groupby("industry")</code></td><td>细分赛道选择，找"高薪且高需求"行业</td></tr>
+      <tr><td>技能词频 Top20</td><td>按分隔符 <code>split+explode</code> 后 <code>value_counts()</code></td><td>构建核心技能图谱，明确学习重点（如 Python/SQL/Spark）</td></tr>
+    </table>
+
+<pre><code># 分组示例：城市 vs 薪资（过滤小样本城市）
+city_salary = df.groupby("city_clean")["salary_avg"].agg(["count","mean","median"])
+city_salary = city_salary[city_salary["count"] >= 20].sort_values("mean", ascending=False)
+
+# 技能词频 Top20
+skill_series = df["skills"].str.split(r"[,，、/]").explode().str.strip()
+skill_series = skill_series[skill_series != ""]
+print(skill_series.value_counts().head(20))</code></pre>
+
+    <div class="biz">每一步 EDA 都对应一个"业务问题"：需求分布→去哪找工；薪资分组→值多少钱；技能词频→学什么。清洗层保证这些结论可信，EDA 层把数据翻译成决策。</div>
+  </section>
+
+  <!-- 3. 输出与下一步 -->
+  <section>
+    <h2><span class="num">3</span>产出与下一步</h2>
+    <ul>
+      <li><strong>jobs_clean.csv</strong>：清洗后结构化数据，作为可视化与建模的输入。</li>
+      <li><strong>EDA 结论</strong>：城市需求榜、学历/经验溢价、行业赛道、技能图谱，可直接写入分析报告。</li>
+      <li><strong>下一步</strong>：用 ECharts/Tableau 将以上分组结果可视化（地图热力、箱线图、词云、技能共现矩阵），形成作品集展示页。</li>
+    </ul>
+    <div class="note">运行前请确认 CSV 列名与本方案一致；薪资阈值 200K 为经验值，若你的数据含海外/高管岗可适当放宽。完整可运行代码见 <code>clean_eda.py</code>。</div>
+  </section>
+
+  <footer>
+    大数据招聘岗位 · 数据清洗与 EDA 方案（求职作品集版）　|　配套代码：clean_eda.py
+  </footer>
+
+</div>
+</body>
+</html>
